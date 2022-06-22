@@ -1,0 +1,9 @@
+# Python
+__pycache__/
+**/*.pyc
+MCPI_Addons.egg-info/
+dist/
+build/
+# C
+*.so
+**/*.gch

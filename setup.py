@@ -5,12 +5,12 @@ with open("README.md", "r", encoding="utf-8") as f:
 
 setuptools.setup(
     name="MCPI-Addons",
-    version="1.0.0",
+    version="1.0.1",
     author="Bigjango13",
     description="An extention of the Minecraft Pi API.",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    url="https://github.com/bigjango13/",
+    url="https://github.com/Bigjango13/MCPI-Addons",
     packages=["mcpi_addons"],
     classifiers=[
         "Programming Language :: Python",

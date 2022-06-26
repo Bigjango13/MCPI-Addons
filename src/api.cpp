@@ -7,6 +7,10 @@
 
 #include "api.h"
 
+
+typedef unsigned char *(*getEntitiyById_t)(unsigned char *level, int entityId);
+static getEntitiyById_t getEntitiyById = (getEntitiyById_t) 0xa45a4;
+
 static unsigned char **Item_items = (unsigned char **) 0x17b250;
 
 unsigned char *minecraft;
@@ -57,9 +61,40 @@ std::string CommandServer_parse_injection(unsigned char *command_server, Connect
     }
     // Remove the ')' at the end
     args.pop_back();
-    //INFO("Args: %s, Base: %s", args.c_str(), base_command.c_str());
-    // Handle the command
-    if (base_command == "custom.postClient"){
+    INFO("Args: %s, Base: %s", args.c_str(), base_command.c_str());
+     // Handle the command
+     unsigned char *level = *(unsigned char **) (minecraft + Minecraft_level_property_offset);
+     if (base_command == "world.getPlayerId"){
+         // Get the entity id of a player from the name.
+         std::string name = base64_decode(args);
+         std::vector<unsigned char *> players = *(std::vector<unsigned char *> *) (level + Level_players_property_offset);
+         for (unsigned char* player : players) {
+             std::string *player_username = (std::string *) (player + Player_username_property_offset);
+             if (*player_username == name){
+                 uint32_t id = *(uint32_t *) (player + 0x1c);
+                 return std::to_string(id) + "\n";
+             }
+         }
+         return "0\n";
+     } else if (base_command == "custom.getUsernames"){
+        std::string usernames;
+
+        std::vector<unsigned char *> players = *(std::vector<unsigned char *> *) (level + Level_players_property_offset);
+        for (unsigned char* player : players) {
+            std::string *player_username = (std::string *) (player + Player_username_property_offset);
+            usernames += base64_encode(*player_username) + ", ";
+        }
+        return usernames + "\n";
+     } else if (base_command == "custom.getUsername"){
+         // Get the entity id of a player from the name.
+         std::string ret = "";
+         std::vector<unsigned char *> players = *(std::vector<unsigned char *> *) (level + Level_players_property_offset);
+         for (unsigned char* player : players) {
+             std::string *player_username = (std::string *) (player + Player_username_property_offset);
+             std::string base64_username = base64_encode(*player_username);
+             ret += base64_username+",";
+         }
+     } else if (base_command == "custom.postClient"){
         // Posts a message client side.
         send_client_message(args);
     } else if (base_command == "custom.postWithoutPrefix") {
@@ -122,7 +157,6 @@ std::string CommandServer_parse_injection(unsigned char *command_server, Connect
         char particle_char[100];
         sscanf(args.c_str(), "%[^|]|%f|%f|%f", particle_char, &x, &y, &z);
         std::string particle = particle_char;
-        unsigned char *level = *(unsigned char **) (get_minecraft() + Minecraft_level_property_offset);
         (*Level_addParticle)(level, particle, x, y, z, 0.0, 0.0, 0.0, 0);
     } else if (base_command == "custom.inventory"){
         unsigned char *screen = (unsigned char *) ::operator new(TOUCH_INGAME_BLOCK_SELECTION_SCREEN_SIZE);

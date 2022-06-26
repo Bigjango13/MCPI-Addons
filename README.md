@@ -29,13 +29,15 @@ It adds these:
 - `custom.info` (`mc.info(msg)`) prints a info message.
 - `custom.warn` (`mc.warn(msg)`) prints a warning.
 - `custom.err` (`mc.err(msg)`) prints a error and stops MCPI.
+- `custom.getUsernames` (`mc.getUsernames()`) to get a list of the usernames that are playing
+- `world.getPlayerId` (`mc.getPlayerEntityId(name)`) this gets the entity id of a player from their name. This doesn't use the `custom` base because it is from the [RaspberryJuice](https://www.spigotmc.org/resources/raspberryjuice.22724/) plugin which isn't compatible with MCPI or Reborn.
 
 I want to add more so please give me suggestions.
 
 ## Known bugs
 
 - Using the particle `iconcrack` with `mc.particle` crashes the game, but using an invaild particle name is fine.
-- `postToClient` really doesn't like it when you use `\x0a` along with some other chars. When posted they might also post a lot of garbage to server side chat. Once it wouldn't stop spamming chat until I use `htop` to kill reborn.
+- `postToClient` really doesn't like it when you use `\x0a` along with some other chars. When posted they might also post a lot of garbage to server side chat. Once it wouldn't stop spamming chat until I used `htop` to kill reborn.
 
 ## Extras
 
@@ -60,6 +62,10 @@ Most people won't need to call this directly, but `mc.getOffset(worldDir)` can g
 The basepath is controlled by `mc.basepath` and defaults to `"~/.minecraft-pi/games/com.mojang/minecraftWorlds/"`.
 
 ## Changelog
+
+- **1.0.1**
+  - Added functionality to `world.getPlayerId`.
+  - Added `custom.getUsernames`.
 
 - **1.0.0**
   - Stopped `getSlot` from crashing the game with invaild ids.

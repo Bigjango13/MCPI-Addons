@@ -22,4 +22,8 @@ bool in_local_world();
 std::string get_world_name();
 std::string get_world_dir();
 
+// Base64
+std::string base64_encode(std::string in);
+std::string base64_decode(std::string in);
+
 }

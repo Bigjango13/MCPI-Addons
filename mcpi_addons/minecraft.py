@@ -1,4 +1,5 @@
 import math
+from base64 import b64encode, b64decode
 from getpass import getuser
 from os.path import exists
 
@@ -207,7 +208,12 @@ class Minecraft:
 
     def getPlayerEntityId(self, name):
         """Get the entity id of the named player => [id:int]"""
-        return int(self.conn.sendReceive(b"world.getPlayerId", name))
+        return int(
+            self.conn.sendReceive(
+                b"world.getPlayerId",
+                b64encode(name.encode("latin-1")).decode("latin-1"),
+            )
+        )
 
     def saveCheckpoint(self):
         """Save a checkpoint that can be used for restoring the world"""
@@ -232,6 +238,16 @@ class Minecraft:
     def getUsername(self):
         """Gets the players username"""
         return self.conn.sendReceive(b"custom.getUsername")
+
+    def getUsernames(self):
+        """Gets the all the players usernames"""
+        usernames = self.conn.sendReceive(b"custom.getUsernames")
+        return list(
+            map(
+                lambda i: b64decode(i.encode("latin-1")).decode("latin-1"),
+                usernames.split(", "),
+            )
+        )[:-1]
 
     def getSlot(self):
         ret = self.conn.sendReceive(b"custom.getSlot").split("|")

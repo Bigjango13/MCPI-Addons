@@ -11,6 +11,9 @@
 typedef unsigned char *(*getEntitiyById_t)(unsigned char *level, int entityId);
 static getEntitiyById_t getEntitiyById = (getEntitiyById_t) 0xa45a4;
 
+static unsigned char *Tiles_backup[257];
+static unsigned char *Items_backup[501];
+
 static unsigned char **Item_items = (unsigned char **) 0x17b250;
 
 unsigned char *minecraft;
@@ -159,10 +162,43 @@ std::string CommandServer_parse_injection(unsigned char *command_server, Connect
         std::string particle = particle_char;
         (*Level_addParticle)(level, particle, x, y, z, 0.0, 0.0, 0.0, 0);
     } else if (base_command == "custom.inventory"){
+        // opens the inventory
         unsigned char *screen = (unsigned char *) ::operator new(TOUCH_INGAME_BLOCK_SELECTION_SCREEN_SIZE);
         ALLOC_CHECK(screen);
         screen = (*Touch_IngameBlockSelectionScreen)(screen);
         (*Minecraft_setScreen)(minecraft, screen);
+    } else if (base_command == "custom.overrideTile"){
+        // Overrides a tile (-1 .. 256).
+        int before, after;
+        sscanf(args.c_str(), "%i,%i", &before, &after);
+        // Makes sure the tiles exists and is valid.
+        if (*(Tile_tiles + after) != NULL && after <= 256 && before <= 256) {
+            // Caches the orginal block so that it can be restored
+            if (Tiles_backup[before] == NULL) Tiles_backup[before] = *(Tile_tiles + before);
+            if (Tiles_backup[after] == NULL) Tiles_backup[after] = *(Tile_tiles + after);
+            *(Tile_tiles + before) = Tiles_backup[after];
+        }
+    } else if (base_command == "custom.overrideItem"){
+        // Overrides an item (256 .. 511)
+        int before, after;
+        sscanf(args.c_str(), "%i,%i", &before, &after);
+        if (*(Item_items + after) != NULL && before <= 511) {
+            // Caches the orginal item so that it can be restored
+            if (Items_backup[before] == NULL) Items_backup[before] = *(Item_items + before);
+            if (Items_backup[after] == NULL) Items_backup[after] = *(Item_items + after);
+            *(Item_items + before) = Items_backup[after];
+        }
+    } else if (base_command == "custom.resetOverrides"){
+        for (int32_t i=0; i <= 255; i++) {
+            if (Tiles_backup[i] != NULL){
+                *(Tile_tiles + i) = Tiles_backup[i];
+            }
+        }
+        for (i=0; i <= 500; i++){
+            if (Items_backup[i] != NULL){
+                *(Item_items + i) = Items_backup[i];
+            }
+        }
     } else if (base_command == "custom.debug"){
         DEBUG("%s", args.c_str());
     } else if (base_command == "custom.info"){

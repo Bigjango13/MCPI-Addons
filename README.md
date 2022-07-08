@@ -1,4 +1,4 @@
-# libextrapi.so
+# MCPI Addons
 
 A Minecraft Pi Edition: Reborn mod to add more features to the api.
 
@@ -31,6 +31,9 @@ It adds these:
 - `custom.err` (`mc.err(msg)`) prints a error and stops MCPI.
 - `custom.getUsernames` (`mc.getUsernames()`) to get a list of the usernames that are playing
 - `world.getPlayerId` (`mc.getPlayerEntityId(name)`) this gets the entity id of a player from their name. This doesn't use the `custom` base because it is from the [RaspberryJuice](https://www.spigotmc.org/resources/raspberryjuice.22724/) plugin which isn't compatible with MCPI or Reborn.
+- `custom.overrideTile` (`mc.overrideTile(before, after)`) overrides the tile with the id of `before` to the tile with the id of `after` unless `after` is an invaid id.
+- `custom.overrideItem` (`mc.overrideItem(before, after)`) overrides the item with the id of `before` to the item with the id of `after` unless `after` is an invaid id. (little testing, will have bugs).
+- `custom.resetOverrides` (`mc.resetOverrides()`) resets item and tile overrides.
 
 I want to add more so please give me suggestions.
 
@@ -43,9 +46,9 @@ I want to add more so please give me suggestions.
 
 ### Particles
 
-Particles are only shown if the player is within 16 blocks.
+Particles are client side and only shown if the player is within 16 blocks.
 Here is a particle list I found at `0x107511` in `minecraft-pi`
-- `bubble` only works in water
+- `bubble` (only works in water)
 - `crit`
 - `flame`
 - `lava`
@@ -63,6 +66,9 @@ The basepath is controlled by `mc.basepath` and defaults to `"~/.minecraft-pi/ga
 
 ## Changelog
 
+- **1.0.2**
+  - Added `custom.overrideTile`, `custom.overrideItem`, and `custom.resetOverrides`.
+
 - **1.0.1**
   - Added functionality to `world.getPlayerId`.
   - Added `custom.getUsernames`.
@@ -77,3 +83,8 @@ The basepath is controlled by `mc.basepath` and defaults to `"~/.minecraft-pi/ga
 
 - **Alpha**
   - Had `getUsername`, `postWithoutPrefix`, and `postClient`.
+
+## Screenshots
+
+Here is a screenshot of using overrides and particles:
+![ ](https://i.imgur.com/I8d8I0G_d.webp?maxwidth=760&fidelity=grand)

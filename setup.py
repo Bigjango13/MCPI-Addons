@@ -5,7 +5,7 @@ with open("README.md", "r", encoding="utf-8") as f:
 
 setuptools.setup(
     name="MCPI-Addons",
-    version="1.0.1",
+    version="1.0.2",
     author="Bigjango13",
     description="An extention of the Minecraft Pi API.",
     long_description=long_description,
@@ -17,6 +17,5 @@ setuptools.setup(
         "Programming Language :: C++",
         "Intended Audience :: Education",
     ],
-    # install_requires=[],
     python_requires=">=3.5",
 )

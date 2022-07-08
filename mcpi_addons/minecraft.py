@@ -297,6 +297,18 @@ class Minecraft:
         """Opens the inventory"""
         self.conn.send(b"custom.inventory")
 
+    def overrideTile(self, before, after):
+        """Overrides a tile"""
+        self.conn.send(b"custom.overrideTile", before, after)
+
+    def overrideItem(self, before, after):
+        """Overrides a item"""
+        self.conn.send(b"custom.overrideItem", before, after)
+
+    def resetOverrides(self):
+        """Resets tile and item overrides"""
+        self.conn.send(b"custom.resetOverrides")
+
     def debug(self, msg):
         """Makes MCPI print a debug message"""
         self.conn.send(b"custom.debug", msg)

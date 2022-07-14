@@ -34,6 +34,8 @@ It adds these:
 - `custom.overrideTile` (`mc.overrideTile(before, after)`) overrides the tile with the id of `before` to the tile with the id of `after` unless `after` is an invaid id.
 - `custom.overrideItem` (`mc.overrideItem(before, after)`) overrides the item with the id of `before` to the item with the id of `after` unless `after` is an invaid id. (little testing, will have bugs).
 - `custom.resetOverrides` (`mc.resetOverrides()`) resets item and tile overrides.
+- `world.getBlocks` (`mc.getBlocks(x1, y1, z1, x2, y2, z2)`) to get a 1D list of blocks.
+- `custom.getBlocks3D` (`mc.getBlocks3D(x1, y1, z1, x2, y2, z2)`) to get a 3D list of blocks.
 
 I want to add more so please give me suggestions.
 
@@ -43,6 +45,18 @@ I want to add more so please give me suggestions.
 - `postToClient` really doesn't like it when you use `\x0a` along with some other chars. When posted they might also post a lot of garbage to server side chat. Once it wouldn't stop spamming chat until I used `htop` to kill reborn.
 
 ## Extras
+
+### Raspberry Juice compatibility
+One day all of these will be supported.
+
+[x] `getBlocks`
+[x] `getPlayerEntityId`
+[ ] `player/entity.getRotation`
+[ ] `player/entity.getPitch`
+[ ] `player/entity.getDirection`
+[ ] `events.pollChatPosts`
+[ ] ChatEvent
+
 
 ### Particles
 
@@ -59,12 +73,16 @@ Here is a particle list I found at `0x107511` in `minecraft-pi`
 - `snowballpoof`
 - `explode`
 
-### Advanced features
-Most people won't need to call this directly, but `mc.getOffset(worldDir)` can get the X and Z offset from `level.dat` (make sure to use `mc.worldDir` and not `mc.worldName` with it).
+### Tiles/Items
 
-The basepath is controlled by `mc.basepath` and defaults to `"~/.minecraft-pi/games/com.mojang/minecraftWorlds/"`.
+A list of tiles can be found [here](https://wiki.mcpirevival.tk/wiki/Minecraft:_Pi_Edition_Complete_Block_List) and a list of items [here](https://wiki.mcpirevival.tk/wiki/Minecraft:_Pi_Edition_Complete_Item_List).
 
 ## Changelog
+
+- **1.0.3**
+  - Added `world.getBlocks`, `custom.getBlocks3D`.
+  - Improved `custom.particle`.
+  - Removed `getOffset` from `minecraft.py`.
 
 - **1.0.2**
   - Added `custom.overrideTile`, `custom.overrideItem`, and `custom.resetOverrides`.

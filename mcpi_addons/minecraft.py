@@ -185,7 +185,8 @@ class Minecraft:
     def getBlocks(self, *args):
         """Get a cuboid of blocks (x0,y0,z0,x1,y1,z1) => [id:int]"""
         s = self.conn.sendReceive(b"world.getBlocks", intFloor(args))
-        return map(int, s.split(","))
+        with open(s, "r") as f:
+            return map(int, f.read().split(","))
 
     def setBlock(self, x, y, z, id, data=0):
         """Set block (x,y,z,id,[data])"""
@@ -272,25 +273,9 @@ class Minecraft:
     def worldDir(self):
         return self.conn.sendReceive(b"custom.worldDir")
 
-    def getOffset(self, worldDir):
-        path = self.basepath + worldDir + "/level.dat"
-        path = path.replace("~", "/home/" + getuser())
-        if not exists(path):
-            print(
-                "The world path is incorrect, please check mc.basename. (Invaild path: "
-                + path
-                + ")"
-            )
-            return (0, 0)
-        value = read_file(path)[""]["value"]
-        return (value["SpawnX"]["value"], value["SpawnZ"]["value"])
-
     def particle(self, x, y, z, particle):
         """Spawns a particle"""
-        xOff, zOff = self.getOffset(self.worldDir())
-        x += xOff + 0.5
-        z += zOff + 0.5
-        args = "|".join(map(str, [particle.lower(), x, y + 64.5, z]))
+        args = "|".join(map(str, [str(particle).lower(), float(x), float(y), float(z)]))
         self.conn.send(b"custom.particle", args)
 
     def inventory(self):
@@ -308,6 +293,16 @@ class Minecraft:
     def resetOverrides(self):
         """Resets tile and item overrides"""
         self.conn.send(b"custom.resetOverrides")
+
+    def getBlocks3D(self, x, y, z, x2, y2, z2):
+        """Get a cuboid of blocks in a way that preserves the 3D structure (x0,y0,z0,x1,y1,z1) => [[[id:int]]]"""
+        s = self.conn.sendReceive(b"custom.getBlocks3D", intFloor([x, y, z, x2, y2, z2]))
+        with open(s, "r") as f:
+            data = f.read().strip().split(";")
+
+        data = [i.split('|') for i in data]
+        data = [[list(map(int, j.split(','))) for j in i] for i in data]
+        return data
 
     def debug(self, msg):
         """Makes MCPI print a debug message"""

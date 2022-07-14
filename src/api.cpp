@@ -1,4 +1,5 @@
 #include <string>
+#include <fstream>
 
 #include "libmcpi-r/minecraft.h"
 #include "libmcpi-r/patch.h"
@@ -7,23 +8,33 @@
 
 #include "api.h"
 
+//typedef unsigned char *(*getEntitiyById_t)(unsigned char *level, int entityId);
+//static getEntitiyById_t getEntitiyById = (getEntitiyById_t) 0xa45a4;
+typedef void (*offsetCords_t)(unsigned char *offsetData, int *x, int *y, int *z);
+static offsetCords_t offsetCords = (offsetCords_t) 0x27c98;
+typedef int32_t (*Level_getTile_t)(unsigned char *level, int32_t x, int32_t y, int32_t z);
+static Level_getTile_t Level_getTile = (Level_getTile_t) 0xa3380;
 
-typedef unsigned char *(*getEntitiyById_t)(unsigned char *level, int entityId);
-static getEntitiyById_t getEntitiyById = (getEntitiyById_t) 0xa45a4;
+static unsigned char **Item_items = (unsigned char **) 0x17b250;
 
 static unsigned char *Tiles_backup[257];
 static unsigned char *Items_backup[501];
 
-static unsigned char **Item_items = (unsigned char **) 0x17b250;
-
 unsigned char *minecraft;
+static void mcpi_callback(unsigned char *mcpi){
+    // Runs on every tick, sets the minecraft var.
+    minecraft = mcpi;
+}
+
 unsigned char *get_minecraft(){
     return minecraft;
 }
 
-static void mcpi_callback(unsigned char *mcpi){
-    // Runs on every tick, sets the minecraft var.
-    minecraft = mcpi;
+void offsetCords_float(unsigned char *offsetData, float *x, float *y, float *z){
+    // Uses a custom implementation of offsetCords becuase the builtin one uses ints
+    *x = *x - *(float *)(offsetData + 0x4);
+    *y = *y - *(float *)(offsetData + 0x8);
+    *z = *z - *(float *)(offsetData + 0xc);
 }
 
 void send_client_message(std::string text) {
@@ -67,18 +78,77 @@ std::string CommandServer_parse_injection(unsigned char *command_server, Connect
     //INFO("Args: %s, Base: %s", args.c_str(), base_command.c_str());
     // Handle the command
     unsigned char *level = *(unsigned char **) (minecraft + Minecraft_level_property_offset);
+    unsigned char *offsetData = (unsigned char*)(command_server + 0x1c);
     if (base_command == "world.getPlayerId"){
         // Get the entity id of a player from the name.
         std::string name = base64_decode(args);
         std::vector<unsigned char *> players = *(std::vector<unsigned char *> *) (level + Level_players_property_offset);
         for (unsigned char* player : players) {
             std::string *player_username = (std::string *) (player + Player_username_property_offset);
+            // Loop throught players to try and find the player with the right username
             if (*player_username == name){
+                // The user exists! Now get the id and return it.
                 uint32_t id = *(uint32_t *) (player + 0x1c);
                 return std::to_string(id) + "\n";
             }
         }
+        // The user wasn't found sadly
         return "0\n";
+    } else if (base_command == "world.getBlocks"){
+        std::string fileName = CommandServer_parse_injection(command_server, client, "custom.getBlocks3D("+args+")\n");
+        if (fileName == "") fileName = "/tmp/mcpi-addons.getBlocks.txt\n";
+        fileName.pop_back();
+        std::string data;
+        char next;
+        FILE *dataFile = fopen(fileName.c_str(), "r");
+        while (1) {
+            next = fgetc(dataFile);
+            // Replace | and ; with ,
+            if (next == '|' || next == ';') next = ',';
+            if (feof(dataFile)) break;
+            data += next;
+        }
+        std::ofstream tempFile(fileName);
+        tempFile << data + "\n";
+        return fileName + "\n";
+    } else if (base_command == "custom.getBlocks3D"){
+        int x, y, z, x2, y2, z2;
+        sscanf(args.c_str(), "%i,%i,%i,%i,%i,%i", &x, &y, &z, &x2, &y2, &z2);
+        offsetCords(level, &x, &y, &z);
+        offsetCords(level, &x2, &y2, &z2);
+        if (x2<x) std::swap(x, x2);
+        if (y2<y) std::swap(y, y2);
+        if (z2<z) std::swap(z, z2);
+        int oy, oz;
+        oy = y;
+        oz = z;
+        std::string ret;
+        std::string command;
+        remove("/tmp/mcpi-addons.getBlocks.txt");
+        std::string tempFilename = "/tmp/mcpi-addons.getBlocks.txt";
+        int id;
+        do {
+            do {
+                do {
+                    id = Level_getTile(level, x, y, z);
+                    ret += std::to_string(id) + ",";
+                    z++;
+                } while (z2 >= z);
+                ret.pop_back();
+                ret += "|";
+                y++;
+                z = oz;
+            } while (y2 >= y);
+            ret.pop_back();
+            ret += ";";
+            x++;
+            y = oy;
+        } while (x2 >= x);
+        // Remove the trailing semicolon
+        ret.pop_back();
+        std::ofstream tempFile(tempFilename);
+        tempFile << ret + "\n";
+        return tempFilename+"\n";
     } else if (base_command == "custom.getUsernames"){
        std::string usernames;
        std::vector<unsigned char *> players = *(std::vector<unsigned char *> *) (level + Level_players_property_offset);
@@ -159,6 +229,7 @@ std::string CommandServer_parse_injection(unsigned char *command_server, Connect
         char particle_char[100];
         sscanf(args.c_str(), "%[^|]|%f|%f|%f", particle_char, &x, &y, &z);
         std::string particle = particle_char;
+        offsetCords_float(offsetData, &x, &y, &z);
         (*Level_addParticle)(level, particle, x, y, z, 0.0, 0.0, 0.0, 0);
     } else if (base_command == "custom.inventory"){
         // opens the inventory

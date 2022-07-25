@@ -1,10 +1,9 @@
 #include <string>
 #include <fstream>
 
-#include "libmcpi-r/minecraft.h"
-#include "libmcpi-r/patch.h"
-#include "libmcpi-r/util.h"
-#include "libmcpi-r/misc.h"
+#include <symbols/minecraft.h>
+#include <libreborn/libreborn.h>
+#include <mods/misc/misc.h>
 
 #include "api.h"
 
@@ -12,8 +11,6 @@
 //static getEntitiyById_t getEntitiyById = (getEntitiyById_t) 0xa45a4;
 typedef void (*offsetCords_t)(unsigned char *offsetData, int *x, int *y, int *z);
 static offsetCords_t offsetCords = (offsetCords_t) 0x27c98;
-typedef int32_t (*Level_getTile_t)(unsigned char *level, int32_t x, int32_t y, int32_t z);
-static Level_getTile_t Level_getTile = (Level_getTile_t) 0xa3380;
 
 static unsigned char **Item_items = (unsigned char **) 0x17b250;
 

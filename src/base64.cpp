@@ -1,6 +1,6 @@
 #include "api.h"
-// code from https://stackoverflow.com/a/34571089/18254316
 
+// code from https://stackoverflow.com/a/34571089/18254316
 std::string base64_encode(std::string in) {
 
     std::string out;

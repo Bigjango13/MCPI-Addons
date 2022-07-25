@@ -1,9 +1,8 @@
 #include <stdlib.h>
 #include <string>
 
-#include "libmcpi-r/minecraft.h"
-#include "libmcpi-r/patch.h"
-#include "libmcpi-r/util.h"
+#include <symbols/minecraft.h>
+#include <libreborn/libreborn.h>
 
 #include "api.h"
 

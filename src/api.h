@@ -1,4 +1,4 @@
-#include "libmcpi-r/minecraft.h"
+#include <symbols/minecraft.h>
 
 extern "C"{
 

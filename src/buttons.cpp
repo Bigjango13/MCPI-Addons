@@ -1,6 +1,6 @@
 #include <string>
 
-#include "libmcpi-r/log.h"
+#include <libreborn/log.h>
 #include "SDL/SDL.h"
 #include "SDL/SDL_keyToInt.h"
 

@@ -9,7 +9,7 @@ If you don't want to compile it (or can't) then you can grab the newest version 
 
 ## Compiling
 
-Just run `make && make install` to create and install the bianary.
+Just run `./build.sh` to create the bianary and run `mv libextrapi.so ~/.minecraft-pi/mods` to install it.
 
 ## What does it do?
 

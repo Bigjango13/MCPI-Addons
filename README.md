@@ -49,13 +49,13 @@ I want to add more so please give me suggestions.
 ### Raspberry Juice compatibility
 One day all of these will be supported.
 
-[x] `getBlocks`
-[x] `getPlayerEntityId`
-[ ] `player/entity.getRotation`
-[ ] `player/entity.getPitch`
-[ ] `player/entity.getDirection`
-[ ] `events.pollChatPosts`
-[ ] ChatEvent
+* [x] `getBlocks`
+* [x] `getPlayerEntityId`
+* [ ] `player/entity.getRotation`
+* [ ] `player/entity.getPitch`
+* [ ] `player/entity.getDirection`
+* [ ] `events.pollChatPosts`
+* [ ] ChatEvent
 
 
 ### Particles

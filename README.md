@@ -1,6 +1,6 @@
 # MCPI Addons
 
-A Minecraft Pi Edition: Reborn mod to add more features to the api.
+A Minecraft Pi Edition: Reborn mod to add more features to the API.
 
 ## Installing
 
@@ -15,34 +15,63 @@ Just run `./build.sh` to create the bianary and run `mv libextrapi.so ~/.minecra
 
 It adds these:
 
-- `custom.getUsername` (`mc.getUsername()`) to get the players username.
-- `custom.postWithoutPrefix` (`mc.postWithoutPrefix(msg)`) to post directly to chat (avoids usernames and sanitation).
-- `custom.postClient` (`mc.postToClient(msg)`) to post chat messages client side. It bypasses sanitization.
-- `custom.getSlot` (`mc.getSlot()`) to get the contents of the current slot.
-- `custom.give` (`mc.give(id, auxiliary = -2, count = -2)`) to change the current slot (-2 means it will stay the same, it isn't -1 becuase the id of -1 exists).
-- `custom.press` (`mc.press(key)`) to simulate pressing and holding a key (for example `mc.press("W")` or `mc.press("SPACE")`).
-- `custom.unpress` (`mc.unpress(key)`) to releases a key.
-- `custom.worldName` (`mc.worldName()`) to get the name of the world.
-- `custom.worldDir` (`mc.worldDir()`) to get the directory of the world.
-- `custom.particle` (`mc.particle(x, y, z, particle)`) to spawn a particle at a location. x, y, and z are floats and automaticly have 0.5 added to them so that they are centered.
-- `custom.debug` (`mc.debug(msg)`) prints a message to debug (only shown if `MCPI_DEBUG` = 1)
-- `custom.info` (`mc.info(msg)`) prints a info message.
-- `custom.warn` (`mc.warn(msg)`) prints a warning.
-- `custom.err` (`mc.err(msg)`) prints a error and stops MCPI.
-- `custom.getUsernames` (`mc.getUsernames()`) to get a list of the usernames that are playing
-- `world.getPlayerId` (`mc.getPlayerEntityId(name)`) this gets the entity id of a player from their name. This doesn't use the `custom` base because it is from the [RaspberryJuice](https://www.spigotmc.org/resources/raspberryjuice.22724/) plugin which isn't compatible with MCPI or Reborn.
-- `custom.overrideTile` (`mc.overrideTile(before, after)`) overrides the tile with the id of `before` to the tile with the id of `after` unless `after` is an invaid id.
-- `custom.overrideItem` (`mc.overrideItem(before, after)`) overrides the item with the id of `before` to the item with the id of `after` unless `after` is an invaid id. (little testing, will have bugs).
-- `custom.resetOverrides` (`mc.resetOverrides()`) resets item and tile overrides.
-- `world.getBlocks` (`mc.getBlocks(x1, y1, z1, x2, y2, z2)`) to get a 1D list of blocks.
-- `custom.getBlocks3D` (`mc.getBlocks3D(x1, y1, z1, x2, y2, z2)`) to get a 3D list of blocks.
+- `custom.log`
+  - `custom.log.debug` (`mc.log.debug(msg)`) Logs a message in debug mode.
+  - `custom.log.info` (`mc.log.info(msg)`) Logs a message.
+  - `custom.warn` (`mc.log.warn(msg)`) Logs a warning.
+  - `custom.log.error` (`mc.log.error(msg)`) Logs an error.
+- `custom.inventory`
+  - `custom.inventory.getSlot` (`mc.inventory.getHeldItem()`) Gets the id, auxiliary, and count of the current slot.
+  - `custom.inventory.unsafeGive` (`mc.inventory.unsafeGive(id=-2, auxiliary=-2, count=-2)`) give the player the item without safety checking (-2 means don't change)
+  - `custom.inventory.give` (`mc.inventory.give(id=-2, auxiliary=-2, count=-2)`) give the player the item without safety checking (-2 means don't change)
+- `custom.override`
+  - `custom.override.reset` (`mc.resetOverrides()`) resets all tile and item overrides.
+  - `custom.override` (`mc.override(before, after)`) overrides the id `before` with the id of `after`.
+- `world.getBlocks`
+  - `world.getBlocks` (`mc.getBlocks(x, y, z, x2, y2, z2)`) Gets a flat list of the blocks between (x, y, z) and (x2, y2, z2).
+  - `world.getBlocks.3D` (`mc.getBlocks3D(x, y, z, x2, y2, z2)`) Gets a 3D list of the blocks between (x, y, z) and (x2, y2, z2).
+- `custom.post`
+  - `custom.post.client` (`mc.postToClient(msg)`) Posts the message to the chat client side.
+  - `custom.post.noPrefix` (`mc.postWithoutPrefix(msg)`) Posts the message without the username prefix.
+- `custom.key`
+  - `custom.key.press` (`mc.player.press(key)`) Presses a key.
+  - `custom.key.release` (`mc.player.release(key)`) Releases a key.
+- `world.getPlayerId` (`mc.getPlayerEntityId(name)`) Gets the id of a player from the name.
+- `custom.username`
+  - `custom.username` (`mc.player.getUsername()`) Gets the local players username.
+  - `custom.username.all` (`mc.getUsernames()`) Gets a list of player usernames.
+- `custom.world`
+  - `custom.world.particle` (`mc.particle(x, y, z, particle)`) Spawns the particle at (x,y,z).
+  - `custom.world.dir` (`mc.world.dir()`) Get the world folder.
+  - `custom.world.name` (`mc.world.name()`) Get the world name.
 
 I want to add more so please give me suggestions.
+
+## Todo list
+
+I am going to add theses features someday, but they aren't here now.
+
+- `player.getHealth() -> int` Returns the players health.
+- `playere.setHealth(health: int)` Sets the players health.
+- `player.getGamemode() -> int` Gets the players gamemode.
+- `player.setGamemode(gamemode: int)` Gets the players gamemode.
+- `player.getOxygen() -> int` Gets the player oxygen.
+- `player.setOxygen(oxygen: int)` Sets the players oxygen.
+- `player.getInventory() -> int[]` Gets the player inventory.
+- `player.setInventory(inventory: int[])` Sets the player inventory.
+- `entity.getArmor(id: int) -> int[4]` Gets the players armor.
+- `entity.setArmor(helmet: int, chestplate: int, leggings: int, boots: int)` Sets the players armor.
+- `reborn.getFeature(feature: string, default: bool = False) -> bool` Gets the status of a reborn feature.
+- `reborn.getVersion() -> string` Gets the reborn version.
+- `camera.getCameraState() -> int` Gets the camera state.
+- `camera.setCameraState(state: int)` Sets the camera state.
+- `minecraft.getVersion() -> str` 0.1.0 or 0.1.1, will be determined at compile time and will require Legacy support.
+- `world.seed() -> string` Gets the worlds seed.
 
 ## Known bugs
 
 - Using the particle `iconcrack` with `mc.particle` crashes the game, but using an invaild particle name is fine.
-- `postToClient` really doesn't like it when you use `\x0a` along with some other chars. When posted they might also post a lot of garbage to server side chat. Once it wouldn't stop spamming chat until I used `htop` to kill reborn.
+- `postToClient` really doesn't like it when you use `\n`. When posted they might also post a lot of garbage to server side chat.
 
 ## Extras
 
@@ -78,6 +107,14 @@ Here is a particle list I found at `0x107511` in `minecraft-pi`
 A list of tiles can be found [here](https://wiki.mcpirevival.tk/wiki/Minecraft:_Pi_Edition_Complete_Block_List) and a list of items [here](https://wiki.mcpirevival.tk/wiki/Minecraft:_Pi_Edition_Complete_Item_List).
 
 ## Changelog
+
+- **1.1.0**
+  - Fixed bug with causing args to be cut off at the first left parenthesis.
+  - Fixed bug in `world.getBlocks` and `custom.getBlocks3D` causing them to target the wrong position.
+  - Added tests.
+  - Improved docs.
+  - Many breaking API changes.
+  - Many internal changes.
 
 - **1.0.3**
   - Added `world.getBlocks`, `custom.getBlocks3D`.

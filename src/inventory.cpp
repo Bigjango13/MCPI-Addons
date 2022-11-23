@@ -1,6 +1,6 @@
 #include <symbols/minecraft.h>
 
-#include "api.h"
+#include "helpers.h"
 
 unsigned char *get_inventory(){
     // Get minecraft and the player
@@ -15,9 +15,11 @@ unsigned char *get_inventory(){
     return NULL;
 }
 
-ItemInstance *get_slot(int slot){
-    // Gets the item from the slot number.
-    if (slot==-256){return NULL;}
+// Gets the item from the slot number.
+ItemInstance *get_item_at_slot(int slot){
+    if (slot == -256) {
+        return NULL;
+    }
     unsigned char *inventory = get_inventory();
     if (inventory != NULL) {
         unsigned char *inventory_vtable = *(unsigned char **) inventory;
@@ -28,15 +30,15 @@ ItemInstance *get_slot(int slot){
     return NULL;
 }
 
+// Gets the current slot
 int get_current_slot(){
-    // Gets the current slot
     unsigned char *inventory = get_inventory();
     if (inventory != NULL) {
         // Get the slot number
-        int32_t selected_slot = *(int32_t *) (inventory + Inventory_selectedSlot_property_offset);
-        int32_t linked_slots_length = *(int32_t *) (inventory + FillingContainer_linked_slots_length_property_offset);
+        int selected_slot = *(int *) (inventory + Inventory_selectedSlot_property_offset);
+        int linked_slots_length = *(int *) (inventory + FillingContainer_linked_slots_length_property_offset);
         if (selected_slot < linked_slots_length) {
-            int32_t *linked_slots = *(int32_t **) (inventory + FillingContainer_linked_slots_property_offset);
+            int *linked_slots = *(int **) (inventory + FillingContainer_linked_slots_property_offset);
             selected_slot = linked_slots[selected_slot];
         }
         return selected_slot;

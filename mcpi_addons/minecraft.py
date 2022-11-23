@@ -121,6 +121,17 @@ class CmdPlayer(CmdPositioner):
         """Clear the players events"""
         self.conn.send(b"player.events.clear")
 
+    def getUsername(self):
+        """Gets the players username"""
+        return b64decode(self.conn.sendReceive(b"custom.username")).decode('latin1')
+
+    def press(self, key):
+        """Presses a key"""
+        self.conn.send(b"custom.key.press", key.upper())
+
+    def release(self, key):
+        """Releases a key"""
+        self.conn.send(b"custom.key.release", key.upper())
 
 class CmdCamera:
     def __init__(self, connection):
@@ -159,6 +170,67 @@ class CmdEvents:
         events = [e for e in s.split("|") if e]
         return [BlockEvent.Hit(*list(map(int, e.split(",")))) for e in events]
 
+class CmdInventory:
+    """Inventory"""
+
+    def __init__(self, connection):
+        self.conn = connection
+
+    def getHeldItem(self):
+        ret = self.conn.sendReceive(b"custom.inventory.getSlot").split("|")
+        return {"id": ret[0], "auxiliary": ret[1], "count": ret[2]}
+
+    def unsafeGive(self, id=-2, auxiliary=-2, count=-2):
+        """Sets the current slot to something else, this is unsafe and may crash the game"""
+        args = "|".join(map(str, [id, auxiliary, count]))
+        self.conn.sendReceive(b"custom.inventory.unsafeGive", args)
+
+    def give(self, id=-2, auxiliary=-2, count=-2):
+        """Sets the current slot to something else"""
+        args = "|".join(map(str, [id, auxiliary, count]))
+        self.conn.sendReceive(b"custom.inventory.give", args)
+
+class CmdReborn:
+    """Reborn"""
+
+    def __init__(self, connection):
+        self.conn = connection
+
+    # TODO
+
+class CmdLog:
+    """Logging"""
+
+    def __init__(self, connection):
+        self.conn = connection
+
+    def debug(self, msg):
+        """Makes MCPI print a debug message"""
+        self.conn.send(b"custom.log.debug", msg)
+
+    def info(self, msg):
+        """Makes MCPI print a info message"""
+        self.conn.send(b"custom.log.info", msg)
+
+    def warn(self, msg):
+        """Makes MCPI print a warn message"""
+        self.conn.send(b"custom.log.warn", msg)
+
+    def err(self, msg):
+        """Makes MCPI print a err message"""
+        self.conn.send(b"custom.log.err", msg)
+
+class CmdWorld:
+    """World"""
+
+    def __init__(self, connection):
+        self.conn = connection
+
+    def name(self):
+        return self.conn.sendReceive(b"custom.world.name")
+
+    def dir(self):
+        return self.conn.sendReceive(b"custom.world.dir")
 
 class Minecraft:
     """The main class to interact with a running instance of Minecraft Pi."""
@@ -168,10 +240,13 @@ class Minecraft:
 
         self.basepath = "~/.minecraft-pi/games/com.mojang/minecraftWorlds/"
 
-        self.camera = CmdCamera(connection)
-        self.entity = CmdEntity(connection)
-        self.player = CmdPlayer(connection)
-        self.events = CmdEvents(connection)
+        self.camera    = CmdCamera(connection)
+        self.entity    = CmdEntity(connection)
+        self.player    = CmdPlayer(connection)
+        self.events    = CmdEvents(connection)
+        self.inventory = CmdInventory(connection)
+        self.logging   = CmdLog(connection)
+        self.world     = CmdWorld(connection)
 
     def getBlock(self, *args):
         """Get block (x,y,z) => id:int"""
@@ -182,11 +257,21 @@ class Minecraft:
         ans = self.conn.sendReceive(b"world.getBlockWithData", intFloor(args))
         return Block(*list(map(int, ans.split(","))))
 
-    def getBlocks(self, *args):
-        """Get a cuboid of blocks (x0,y0,z0,x1,y1,z1) => [id:int]"""
+    def getBlocks(self, x, y, z, x2, y2, z2):
+        """Get a cuboid of blocks (x,y,z,x2,y2,z2) => [id:int]"""
         s = self.conn.sendReceive(b"world.getBlocks", intFloor(args))
         with open(s, "r") as f:
             return map(int, f.read().split(","))
+
+    def getBlocks3D(self, x, y, z, x2, y2, z2):
+        """Get a cuboid of blocks in a way that preserves the 3D structure (x,y,z,x2,y2,z2) => [[[id:int]]]"""
+        s = self.conn.sendReceive(b"world.getBlocks.3D", intFloor([x, y, z, x2, y2, z2]))
+        with open(s, "r") as f:
+            data = f.read().strip().split(";")
+
+        data = [i.split('|') for i in data]
+        data = [[list(map(int, j.split(','))) for j in i] for i in data]
+        return data
 
     def setBlock(self, x, y, z, id, data=0):
         """Set block (x,y,z,id,[data])"""
@@ -230,19 +315,15 @@ class Minecraft:
 
     def postToClient(self, msg):
         """Post a message to the client side game chat"""
-        self.conn.send(b"custom.postClient", msg)
+        self.conn.send(b"custom.post.client", msg)
 
     def postWithoutPrefix(self, msg):
         """Post a message to chat without the username prefix"""
-        self.conn.send(b"custom.postWithoutPrefix", msg)
-
-    def getUsername(self):
-        """Gets the players username"""
-        return self.conn.sendReceive(b"custom.getUsername")
+        self.conn.send(b"custom.post.noPrefix", msg)
 
     def getUsernames(self):
         """Gets the all the players usernames"""
-        usernames = self.conn.sendReceive(b"custom.getUsernames")
+        usernames = self.conn.sendReceive(b"custom.username.all")
         return list(
             map(
                 lambda i: b64decode(i.encode("latin-1")).decode("latin-1"),
@@ -250,75 +331,22 @@ class Minecraft:
             )
         )[:-1]
 
-    def getSlot(self):
-        ret = self.conn.sendReceive(b"custom.getSlot").split("|")
-        return {"id": ret[0], "auxiliary": ret[1], "count": ret[2]}
-
-    def give(self, id, auxiliary=-2, count=-2):
-        """Sets the current slot to something else"""
-        args = "|".join(map(str, [id, auxiliary, count]))
-        self.conn.sendReceive(b"custom.give", args)
-
-    def press(self, key):
-        """Presses a key"""
-        self.conn.send(b"custom.press", key.upper())
-
-    def unpress(self, key):
-        """Releases a key"""
-        self.conn.send(b"custom.unpress", key.upper())
-
-    def worldName(self):
-        return self.conn.sendReceive(b"custom.worldName")
-
-    def worldDir(self):
-        return self.conn.sendReceive(b"custom.worldDir")
-
     def particle(self, x, y, z, particle):
         """Spawns a particle"""
         args = "|".join(map(str, [str(particle).lower(), float(x), float(y), float(z)]))
-        self.conn.send(b"custom.particle", args)
+        self.conn.send(b"custom.world.particle", args)
 
     def inventory(self):
         """Opens the inventory"""
         self.conn.send(b"custom.inventory")
 
-    def overrideTile(self, before, after):
-        """Overrides a tile"""
-        self.conn.send(b"custom.overrideTile", before, after)
-
-    def overrideItem(self, before, after):
-        """Overrides a item"""
-        self.conn.send(b"custom.overrideItem", before, after)
+    def override(self, before, after):
+        """Overrides a tile ot item"""
+        self.conn.send(b"custom.override", before, after)
 
     def resetOverrides(self):
         """Resets tile and item overrides"""
-        self.conn.send(b"custom.resetOverrides")
-
-    def getBlocks3D(self, x, y, z, x2, y2, z2):
-        """Get a cuboid of blocks in a way that preserves the 3D structure (x0,y0,z0,x1,y1,z1) => [[[id:int]]]"""
-        s = self.conn.sendReceive(b"custom.getBlocks3D", intFloor([x, y, z, x2, y2, z2]))
-        with open(s, "r") as f:
-            data = f.read().strip().split(";")
-
-        data = [i.split('|') for i in data]
-        data = [[list(map(int, j.split(','))) for j in i] for i in data]
-        return data
-
-    def debug(self, msg):
-        """Makes MCPI print a debug message"""
-        self.conn.send(b"custom.debug", msg)
-
-    def info(self, msg):
-        """Makes MCPI print a info message"""
-        self.conn.send(b"custom.info", msg)
-
-    def warn(self, msg):
-        """Makes MCPI print a warn message"""
-        self.conn.send(b"custom.warn", msg)
-
-    def err(self, msg):
-        """Makes MCPI print a err message"""
-        self.conn.send(b"custom.err", msg)
+        self.conn.send(b"custom.override.reset")
 
     def setting(self, setting, status):
         """Set a world setting (setting, status). keys: world_immutable, nametags_visible"""

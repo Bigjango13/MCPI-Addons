@@ -11,5 +11,5 @@ project(extra-api)
 include("$ENV{HOME}/.minecraft-pi/sdk/lib/minecraft-pi-reborn-client/sdk/sdk.cmake")
 
 # Build
-add_library(extrapi SHARED src/api.cpp src/base64.cpp src/buttons.cpp src/inventory.cpp src/world.cpp)
+add_library(extrapi SHARED src/api.cpp src/base64.cpp src/inventory.cpp src/helpers.cpp)
 target_link_libraries(extrapi mods-headers reborn-patch symbols misc)

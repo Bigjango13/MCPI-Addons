@@ -1,292 +1,334 @@
-#include <string>
+#include <algorithm>
 #include <fstream>
+#include <map>
+#include <string>
 
-#include <symbols/minecraft.h>
 #include <libreborn/libreborn.h>
 #include <mods/misc/misc.h>
 
 #include "api.h"
+#include "base64.h"
+#include "extra.h"
+#include "helpers.h"
 
-//typedef unsigned char *(*getEntitiyById_t)(unsigned char *level, int entityId);
-//static getEntitiyById_t getEntitiyById = (getEntitiyById_t) 0xa45a4;
-typedef void (*offsetCords_t)(unsigned char *offsetData, int *x, int *y, int *z);
-static offsetCords_t offsetCords = (offsetCords_t) 0x27c98;
-
-static unsigned char **Item_items = (unsigned char **) 0x17b250;
-
-static unsigned char *Tiles_backup[257];
-static unsigned char *Items_backup[501];
-
-unsigned char *minecraft;
-static void mcpi_callback(unsigned char *mcpi){
-    // Runs on every tick, sets the minecraft var.
-    minecraft = mcpi;
+typedef std::string (*handle_t)(std::string command, std::string args, unsigned char *command_server);
+std::map<std::string, handle_t> &get_handlers() {
+    static std::map<std::string, handle_t> handlers = {};
+    return handlers;
 }
-
-unsigned char *get_minecraft(){
-    return minecraft;
-}
-
-void offsetCords_float(unsigned char *offsetData, float *x, float *y, float *z){
-    // Uses a custom implementation of offsetCords becuase the builtin one uses ints
-    *x = *x - *(float *)(offsetData + 0x4);
-    *y = *y - *(float *)(offsetData + 0x8);
-    *z = *z - *(float *)(offsetData + 0xc);
-}
-
-void send_client_message(std::string text) {
-    // Gets the gui from the minecraft instance
-    unsigned char *gui = minecraft + Minecraft_gui_property_offset;
-    // Adds a message to the gui (aka chat).
-    (*Gui_addMessage)(gui, text);
-    // Logging
-    std::string client_logging = "[CLIENT]: %s\n";
-    #ifdef MCPI_EXTENDED
-    // Use colored logs for MCPI++
-    client_logging = "\x1b[32m[CLIENT]: %s\x1b[0m\n";
-    #endif
-    fprintf(stderr, client_logging.c_str(), text.c_str());
-}
-
-std::string get_username(){
-    // Gets the player from the minecraft instance
-    unsigned char *player = *(unsigned char **) (minecraft + Minecraft_player_property_offset);
-    // Gets the username from the player instance
-    std::string *player_username = (std::string *) (player + Player_username_property_offset);
-    return *player_username;
+void add_command_handler(std::string name, handle_t handle) {
+    get_handlers()[name] = handle;
 }
 
 std::string CommandServer_parse_injection(unsigned char *command_server, ConnectedClient &client, std::string const& command){
-    // Get the command
-    std::string base_command;
+    // Get the command, base is the name and root is the first two. For example:
+    // command = "custom.logging.debug(Test)"
+    // root_command = "custom.logging", base_command = "custom.logging.debug"
+    // Most of the time they are the same
+    std::string root_command = "";
+    std::string base_command = "";
     int i = 0;
     while (base_command.back() != '('){
-        base_command += command[i++];
+        if (command[i] == '.') {
+            root_command = base_command;
+        }
+        base_command += command[i];
+        i++;
     }
     // Remove the '(' at the end
     base_command.pop_back();
+    if (std::count(base_command.begin(), base_command.end(), '.') == 1) {
+        root_command = base_command;
+    }
+
     // Get the args
     std::string args;
-    while (args.back() != ')'){
+    while (command[i] != '\0'){
         args += command[i++];
     }
-    // Remove the ')' at the end
+    // Remove the ')\n' at the end
     args.pop_back();
-    //INFO("Args: %s, Base: %s", args.c_str(), base_command.c_str());
+    args.pop_back();
+    INFO("Args: %s, Base: %s, Root: %s", args.c_str(), base_command.c_str(), root_command.c_str());
+
     // Handle the command
-    unsigned char *level = *(unsigned char **) (minecraft + Minecraft_level_property_offset);
+    std::map<std::string, handle_t>::const_iterator pos = get_handlers().find(root_command);
+    if (pos != get_handlers().end()) {
+        // Call handler
+        return (pos->second)(base_command, args, command_server);
+    }
+    // Handler doesn't exist, call CommandServer::parse
+    return (*CommandServer_parse)(command_server, client, command);
+}
+
+// Handle logging
+std::string handle_logging(std::string command, std::string args, unsigned char *command_server) {
+    // Handles logging
+    if (command == "custom.log.debug"){
+        DEBUG("%s", args.c_str());
+    } else if (command == "custom.log.info"){
+        INFO("%s", args.c_str());
+    } else if (command == "custom.log.warn"){
+        WARN("%s", args.c_str());
+    } else if (command == "custom.log.err"){
+        ERR("%s", args.c_str());
+    }
+    return "";
+}
+
+// Handle getSlot, give, and unsafeGive
+std::string handle_inventory(std::string command, std::string args, unsigned char *command_server) {
+    if (command == "custom.inventory.getSlot"){
+        // Return data on the current slot
+        ItemInstance *inventory_item = get_item_at_slot(get_current_slot());
+        if (inventory_item != NULL){
+            return std::to_string(inventory_item->id) +
+                "|" + std::to_string(inventory_item->auxiliary) +
+                "|" + std::to_string(inventory_item->count) + "\n";
+        }
+        // Return a blank slot if empty
+        return "0|0|0\n";
+    }
+    // If the command isn't give or unsafeGive then return
+    if (
+        command != "custom.inventory.unsafeGive"
+        && command != "custom.inventory.give"
+    ) {
+        return "";
+    }
+    // Else prep for (unsafe) give
+    int id, auxiliary, count;
+    sscanf(args.c_str(), "%d|%d|%d", &id, &auxiliary, &count);
+    // Safety
+    if (command != "custom.inventory.unsafeGive") {
+        // Don't allow invalid IDs
+        if (
+            (*(Item_items + id) == NULL && *(Tile_tiles + id) == NULL)
+            // Special cases (333, -1, -2, 0)
+            || (id == 333 || id < -2)
+        ) {
+            return "Failed\n";
+        }
+    }
+    // Give it to the player
+    ItemInstance *inventory_item = get_item_at_slot(get_current_slot());
+    if (inventory_item != NULL){
+        // Don't change id if it's -2 or 0
+        if (-2 != id){
+            inventory_item->id = id;
+        }
+        // Don't change auxiliary if it's -2
+        if (-2 != auxiliary){
+            inventory_item->auxiliary = auxiliary;
+        }
+        // Don't change count if it's -2
+        if (-2 != count){
+            inventory_item->count = count;
+        }
+    } else {
+        send_client_message("Cannot work on empty slot");
+        return "Failed\n";
+    }
+    return "Worked\n";
+}
+
+// Handles overriding tiles/items
+std::string handle_override(std::string command, std::string args, unsigned char *command_server) {
+    static unsigned char *Tiles_backup[257] = {};
+    static unsigned char *Items_backup[501] = {};
+    if (command == "custom.override.reset") {
+        // Reset overrides
+        int32_t i = 0;
+        for (i=0; i <= 255; i++) {
+            // Reset tiles
+            if (Tiles_backup[i] != NULL){
+                Tile_tiles[i] = Tiles_backup[i];
+            }
+        }
+        for (i=0; i <= 500; i++){
+            // Reset items
+            if (Items_backup[i] != NULL){
+                Item_items[i] = Items_backup[i];
+            }
+        }
+        return "";
+    } else if (command != "custom.override") return "";
+    int before, after;
+    sscanf(args.c_str(), "%i,%i", &before, &after);
+    if (before < 256) {
+        // Overrides a tile (-1 .. 256).
+        // Makes sure the tiles exists and is valid.
+        if (Tile_tiles[after] != NULL && after <= 256 && before <= 256) {
+            // Caches the orginal block so that it can be restored
+            if (Tiles_backup[before] == NULL) Tiles_backup[before] = Tile_tiles[before];
+            if (Tiles_backup[after] == NULL) Tiles_backup[after] = Tile_tiles[after];
+            Tile_tiles[before] = Tiles_backup[after];
+        }
+    } else {
+        // Overrides an item (256 .. 511)
+        if (Item_items[after] != NULL && before <= 511) {
+            // Caches the orginal item so that it can be restored
+            if (Items_backup[before] == NULL) Items_backup[before] = Item_items[before];
+            if (Items_backup[after] == NULL) Items_backup[after] = Item_items[after];
+            Item_items[before] = Items_backup[after];
+        }
+    }
+    return "";
+}
+
+// Handle getBlocks and getBlocks3D
+std::string handle_getBlocks(std::string command, std::string args, unsigned char *command_server) {
+    std::string tempFilename = "/tmp/mcpi-addons.getBlocks.txt";
+    int x, y, z, x2, y2, z2;
+    sscanf(args.c_str(), "%i,%i,%i,%i,%i,%i", &x, &y, &z, &x2, &y2, &z2);
+    // Offset the cords
     unsigned char *offsetData = (unsigned char*)(command_server + 0x1c);
-    if (base_command == "world.getPlayerId"){
+    offsetCords(offsetData, &x, &y, &z);
+    offsetCords(offsetData, &x2, &y2, &z2);
+    // Swap the cords so "?2 > ?" (where ? is x, y or z)
+    if (x2<x) std::swap(x, x2);
+    if (y2<y) std::swap(y, y2);
+    if (z2<z) std::swap(z, z2);
+    // Remove the tempfile if it exists
+    remove(tempFilename.c_str());
+    // Prepare for looping
+    unsigned char *level = get_level();
+    int id;
+    int oy, oz;
+    oy = y;
+    oz = z;
+    std::string ret;
+    do {
+        do {
+            do {
+                // Get the id and append it
+                id = Level_getTile(level, x, y, z);
+                ret += std::to_string(id) + ",";
+                z++;
+            } while (z2 >= z);
+            ret.pop_back();
+            // Use the normal separator normally, else the 3D list one.
+            if (command != "world.getBlocks") {
+                ret += "|";
+            } else {
+                ret += ",";
+            }
+            y++;
+            z = oz;
+        } while (y2 >= y);
+        ret.pop_back();
+        // Use the normal separator normally, else the 3D list one.
+        if (command != "world.getBlocks") {
+            ret += ";";
+        } else {
+            ret += ",";
+        }
+        x++;
+        y = oy;
+    } while (x2 >= x);
+    // Remove the trailing semicolon
+    ret.pop_back();
+    std::ofstream tempFile(tempFilename);
+    tempFile << ret + "\n";
+    // Return the filename for openning.
+    return tempFilename+"\n";
+}
+
+// Handle posting to client and without prefix
+std::string handle_post(std::string command, std::string args, unsigned char *command_server) {
+    if (command == "custom.post.client"){
+        // Posts a message client side.
+        send_client_message(args);
+    } else if (command == "custom.post.noPrefix") {
+        // Posts without the "<username> " prefix.
+        // The prefix is added server side so it may not work when playing on a server.
+        unsigned char *server_side_network_handler = *(unsigned char**) (get_minecraft() + Minecraft_network_handler_property_offset);
+        (*ServerSideNetworkHandler_displayGameMessage)(server_side_network_handler, args);
+    }
+    return "";
+}
+
+// Handle pressing and releasing keys
+std::string handle_key(std::string command, std::string args, unsigned char *command_server) {
+    if (command == "custom.key.press"){
+        // Starts pressing a key
+        press_button_from_key(true, args);
+    } else if (command == "custom.key.release") {
+        // Stops pressing a key
+        press_button_from_key(false, args);
+    }
+    return "";
+}
+
+// Handle looking up ids, getting usernames, and the players username
+std::string handle_username(std::string command, std::string args, unsigned char *command_server) {
+    if (command == "world.getPlayerId"){
         // Get the entity id of a player from the name.
         std::string name = base64_decode(args);
-        std::vector<unsigned char *> players = *(std::vector<unsigned char *> *) (level + Level_players_property_offset);
-        for (unsigned char* player : players) {
+        for (unsigned char *player : get_players()) {
             std::string *player_username = (std::string *) (player + Player_username_property_offset);
             // Loop throught players to try and find the player with the right username
             if (*player_username == name){
                 // The user exists! Now get the id and return it.
-                uint32_t id = *(uint32_t *) (player + 0x1c);
+                uint32_t id = *(uint32_t *) (player + Entity_id_property_offset);
                 return std::to_string(id) + "\n";
             }
         }
-        // The user wasn't found sadly
+        // The user wasn't found
         return "0\n";
-    } else if (base_command == "world.getBlocks"){
-        std::string fileName = CommandServer_parse_injection(command_server, client, "custom.getBlocks3D("+args+")\n");
-        if (fileName == "") fileName = "/tmp/mcpi-addons.getBlocks.txt\n";
-        fileName.pop_back();
-        std::string data;
-        char next;
-        FILE *dataFile = fopen(fileName.c_str(), "r");
-        while (1) {
-            next = fgetc(dataFile);
-            // Replace | and ; with ,
-            if (next == '|' || next == ';') next = ',';
-            if (feof(dataFile)) break;
-            data += next;
-        }
-        std::ofstream tempFile(fileName);
-        tempFile << data + "\n";
-        return fileName + "\n";
-    } else if (base_command == "custom.getBlocks3D"){
-        int x, y, z, x2, y2, z2;
-        sscanf(args.c_str(), "%i,%i,%i,%i,%i,%i", &x, &y, &z, &x2, &y2, &z2);
-        offsetCords(level, &x, &y, &z);
-        offsetCords(level, &x2, &y2, &z2);
-        if (x2<x) std::swap(x, x2);
-        if (y2<y) std::swap(y, y2);
-        if (z2<z) std::swap(z, z2);
-        int oy, oz;
-        oy = y;
-        oz = z;
-        std::string ret;
-        std::string command;
-        remove("/tmp/mcpi-addons.getBlocks.txt");
-        std::string tempFilename = "/tmp/mcpi-addons.getBlocks.txt";
-        int id;
-        do {
-            do {
-                do {
-                    id = Level_getTile(level, x, y, z);
-                    ret += std::to_string(id) + ",";
-                    z++;
-                } while (z2 >= z);
-                ret.pop_back();
-                ret += "|";
-                y++;
-                z = oz;
-            } while (y2 >= y);
-            ret.pop_back();
-            ret += ";";
-            x++;
-            y = oy;
-        } while (x2 >= x);
-        // Remove the trailing semicolon
-        ret.pop_back();
-        std::ofstream tempFile(tempFilename);
-        tempFile << ret + "\n";
-        return tempFilename+"\n";
-    } else if (base_command == "custom.getUsernames"){
+    }
+    if (command == "custom.username.all"){
+       // Gets all the usernames
        std::string usernames;
-       std::vector<unsigned char *> players = *(std::vector<unsigned char *> *) (level + Level_players_property_offset);
-       for (unsigned char* player : players) {
-           std::string *player_username = (std::string *) (player + Player_username_property_offset);
-           usernames += base64_encode(*player_username) + ", ";
+       for (unsigned char *player : get_players()) {
+           usernames += base64_encode(get_username(player)) + ", ";
        }
        return usernames + "\n";
-    } else if (base_command == "custom.getUsername"){
-        // Get the entity id of a player from the name.
-        std::string ret = "";
-        std::vector<unsigned char *> players = *(std::vector<unsigned char *> *) (level + Level_players_property_offset);
-        for (unsigned char* player : players) {
-            std::string *player_username = (std::string *) (player + Player_username_property_offset);
-            std::string base64_username = base64_encode(*player_username);
-            ret += base64_username+",";
-        }
-    } else if (base_command == "custom.postClient"){
-        // Posts a message client side.
-        send_client_message(args);
-    } else if (base_command == "custom.postWithoutPrefix") {
-        // Posts without the "<username> " prefix.
-        // The prefix is added server side so it may not work on servers.
-        unsigned char *server_side_network_handler = *(unsigned char**) (minecraft + Minecraft_network_handler_property_offset);
-        (*ServerSideNetworkHandler_displayGameMessage)(server_side_network_handler, args);
-    } else if (base_command == "custom.getUsername"){
-        // Return the players username
-        // The API uses newlines as EOL
-        return get_username()+"\n";
-    } else if (base_command == "custom.getSlot"){
-        // Return data on a slot
-        ItemInstance *inventory_item = get_slot(get_current_slot());
-        if (inventory_item != NULL){
-            return std::to_string(inventory_item->id)+"|"+std::to_string(inventory_item->auxiliary)+"|"+std::to_string(inventory_item->count)+"\n";
-        }
-        // Return a blank slot if empty
-        return "0|0|0\n";
-    } else if (base_command == "custom.give"){
-        // Give the player an item
-        int id, auxiliary, count;
-        sscanf(args.c_str(), "%d|%d|%d", &id, &auxiliary, &count);
-        // Don't allow invalid IDs
-        if ((*(Item_items + id) == NULL && *(Tile_tiles + id) == NULL) || id == 333 || id < -1) { return "Failed\n"; }
-        ItemInstance *inventory_item = get_slot(get_current_slot());
-        if (inventory_item != NULL){
-            if (-2 != id){
-                inventory_item->id = id;
-            }
-            if (-2 != auxiliary){
-                inventory_item->auxiliary = auxiliary;
-            }
-            if (-2 != count){
-                inventory_item->count = count;
-            }
-            return "Worked\n";
-        } else {
-            send_client_message("Cannot work on empty slot");
-            return "Failed\n";
-        }
-    } else if (base_command == "custom.press"){
-        // Starts pressing a key
-        press_button_from_key(true, args);
-    } else if (base_command == "custom.unpress"){
-        // Stops pressing a key
-        press_button_from_key(false, args);
-    } else if (base_command == "custom.worldDir"){
-        // Returns the current worlds directory
-        std::string name = get_world_dir();
-        if (name == "") return "_LastJoinedServer\n";
-        return name+"\n";
-    } else if (base_command == "custom.worldName"){
-        // Returns the current worlds name
-        std::string name = get_world_name();
-        return name+"\n";
-    } else if (base_command == "custom.particle"){
+    } else {
+        // Gets the local players username
+        return base64_encode(get_username()) + "\n";
+    }
+    return "";
+}
+
+// Handle getting the world name and dir
+std::string handle_world(std::string command, std::string args, unsigned char *command_server) {
+    if (command == "custom.world.particle"){
         // Level_addParticle doesn't take normal x, y, and z. It takes offsetted xyz (no negitives), this is handled by minecraft.py
         float x, y, z;
         char particle_char[100];
         sscanf(args.c_str(), "%[^|]|%f|%f|%f", particle_char, &x, &y, &z);
         std::string particle = particle_char;
+
+        unsigned char *offsetData = (unsigned char*)(command_server + 0x1c);
         offsetCords_float(offsetData, &x, &y, &z);
-        (*Level_addParticle)(level, particle, x, y, z, 0.0, 0.0, 0.0, 0);
-    } else if (base_command == "custom.inventory"){
-        // opens the inventory
-        unsigned char *screen = (unsigned char *) ::operator new(TOUCH_INGAME_BLOCK_SELECTION_SCREEN_SIZE);
-        ALLOC_CHECK(screen);
-        screen = (*Touch_IngameBlockSelectionScreen)(screen);
-        (*Minecraft_setScreen)(minecraft, screen);
-    } else if (base_command == "custom.overrideTile"){
-        // Overrides a tile (-1 .. 256).
-        int before, after;
-        sscanf(args.c_str(), "%i,%i", &before, &after);
-        // Makes sure the tiles exists and is valid.
-        if (*(Tile_tiles + after) != NULL && after <= 256 && before <= 256) {
-            // Caches the orginal block so that it can be restored
-            if (Tiles_backup[before] == NULL) Tiles_backup[before] = *(Tile_tiles + before);
-            if (Tiles_backup[after] == NULL) Tiles_backup[after] = *(Tile_tiles + after);
-            *(Tile_tiles + before) = Tiles_backup[after];
-        }
-    } else if (base_command == "custom.overrideItem"){
-        // Overrides an item (256 .. 511)
-        int before, after;
-        sscanf(args.c_str(), "%i,%i", &before, &after);
-        if (*(Item_items + after) != NULL && before <= 511) {
-            // Caches the orginal item so that it can be restored
-            if (Items_backup[before] == NULL) Items_backup[before] = *(Item_items + before);
-            if (Items_backup[after] == NULL) Items_backup[after] = *(Item_items + after);
-            *(Item_items + before) = Items_backup[after];
-        }
-    } else if (base_command == "custom.resetOverrides"){
-        for (int32_t i=0; i <= 255; i++) {
-            if (Tiles_backup[i] != NULL){
-                *(Tile_tiles + i) = Tiles_backup[i];
-            }
-        }
-        for (i=0; i <= 500; i++){
-            if (Items_backup[i] != NULL){
-                *(Item_items + i) = Items_backup[i];
-            }
-        }
-    } else if (base_command == "custom.debug"){
-        DEBUG("%s", args.c_str());
-    } else if (base_command == "custom.info"){
-        INFO("%s", args.c_str());
-    } else if (base_command == "custom.warn"){
-        WARN("%s", args.c_str());
-    } else if (base_command == "custom.err"){
-        ERR("%s", args.c_str());
-    } else {
-        // Call original method
-       std::string ret = (*CommandServer_parse)(command_server, client, command);
-       // Return it
-       return ret;
+        (*Level_addParticle)(get_level(), particle, x, y, z, 0.0, 0.0, 0.0, 0);
+    } else if (command == "custom.world.dir"){
+        // Returns the current worlds directory
+        std::string name = get_world_dir();
+        if (name == "") return "_LastJoinedServer\n";
+        return name+"\n";
+    } else if (command == "custom.world.name"){
+        // Returns the current worlds name
+        std::string name = get_world_name();
+        return name+"\n";
     }
-    // Return values must not have been needed
     return "";
 }
 
 __attribute__((constructor)) static void init() {
     // Call the custom version of CommandServer_parse instead of the real one.
     overwrite_calls((void *) CommandServer_parse, (void *) CommandServer_parse_injection);
-    // Runs on every tick.
-    misc_run_on_update(mcpi_callback);
+    // Handlers
+    add_command_handler("custom.log", handle_logging);
+    add_command_handler("custom.inventory", handle_inventory);
+    add_command_handler("custom.override", handle_override);
+    // Get blocks doesn't use the "custom." style handlers for Raspberry Juice compat.
+    add_command_handler("world.getBlocks", handle_getBlocks);
+    add_command_handler("custom.post", handle_post);
+    add_command_handler("custom.key", handle_key);
+    // Username uses two handlers
+    add_command_handler("custom.username", handle_username);
+    add_command_handler("world.getPlayerId", handle_username);
+    add_command_handler("custom.world", handle_world);
 }

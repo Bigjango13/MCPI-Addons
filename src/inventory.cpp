@@ -2,7 +2,7 @@
 
 #include "helpers.h"
 
-unsigned char *get_inventory(){
+unsigned char *get_inventory() {
     // Get minecraft and the player
     unsigned char *minecraft = get_minecraft();
     unsigned char *player = *(unsigned char **) (minecraft + Minecraft_player_property_offset);
@@ -16,7 +16,7 @@ unsigned char *get_inventory(){
 }
 
 // Gets the item from the slot number.
-ItemInstance *get_item_at_slot(int slot){
+ItemInstance *get_item_at_slot(int slot) {
     if (slot == -256) {
         return NULL;
     }
@@ -31,7 +31,7 @@ ItemInstance *get_item_at_slot(int slot){
 }
 
 // Gets the current slot
-int get_current_slot(){
+int get_current_slot() {
     unsigned char *inventory = get_inventory();
     if (inventory != NULL) {
         // Get the slot number

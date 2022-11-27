@@ -1,5 +1,3 @@
-//#include <fstream>
-
 #include <symbols/minecraft.h>
 #include <libreborn/libreborn.h>
 #include <mods/misc/misc.h>
@@ -10,22 +8,27 @@
 #include "helpers.h"
 
 unsigned char *minecraft;
-static void mcpi_callback(unsigned char *mcpi){
+static void mcpi_callback(unsigned char *mcpi) {
     // Runs on every tick, sets the minecraft var.
     minecraft = mcpi;
 }
 
-unsigned char *get_minecraft(){
+unsigned char *get_minecraft() {
     return minecraft;
 }
 
-unsigned char *get_level(){
+unsigned char *get_level() {
     unsigned char *level = *(unsigned char **) (minecraft + Minecraft_level_property_offset);
     return level;
 }
 
+unsigned char *get_player() {
+    unsigned char *player = *(unsigned char **) (minecraft + Minecraft_player_property_offset);
+    return player;
+}
+
 // Uses a custom implementation of offsetCords becuase the builtin one uses ints
-void offsetCords_float(unsigned char *offsetData, float *x, float *y, float *z){
+void offsetCords_float(unsigned char *offsetData, float *x, float *y, float *z) {
     *x = *x - *(float *)(offsetData + 0x4);
     *y = *y - *(float *)(offsetData + 0x8);
     *z = *z - *(float *)(offsetData + 0xc);
@@ -47,12 +50,12 @@ void send_client_message(std::string text) {
 }
 
 // Returns a vector of players
-std::vector<unsigned char *> get_players(){
+std::vector<unsigned char *> get_players() {
     return *(std::vector<unsigned char *> *) (get_level() + Level_players_property_offset);
 }
 
 // Returns the players username, if player ia NULL it uses the local player.
-std::string get_username(unsigned char *player /*= NULL*/){
+std::string get_username(unsigned char *player /*= NULL*/) {
     if (player == NULL) {
         // Gets the player from the minecraft instance
         player = *(unsigned char **) (minecraft + Minecraft_player_property_offset);
@@ -63,7 +66,7 @@ std::string get_username(unsigned char *player /*= NULL*/){
 }
 
 // Presses or releases a button based on scancode and sym
-void press_button_from_code(bool press, int scancode, int sym){
+void press_button_from_code(bool press, int scancode, int sym) {
     SDL_Event event;
     event.type = press ? SDL_KEYDOWN : SDL_KEYUP;
     event.key.state = press ? SDL_PRESSED : SDL_RELEASED;
@@ -74,24 +77,24 @@ void press_button_from_code(bool press, int scancode, int sym){
 }
 
 // Small wrapper for press_button_from_code that uses the scancode and key map
-void press_button_from_key(bool press, std::string key){
+void press_button_from_key(bool press, std::string key) {
     press_button_from_code(press, SDL_ScancodeMap[key], SDLKeyMap[key]);
 }
 
 static std::string name = "";
 static std::string dir = "";
 static bool in_game = false;
-bool in_local_world(){
+bool in_local_world() {
     // Taking advantage of not logging servers
     return in_game;
 }
 
-std::string get_world_name(){
+std::string get_world_name() {
     if (in_local_world()) return name;
     return "server";
 }
 
-std::string get_world_dir(){
+std::string get_world_dir() {
     if (in_local_world()) return dir;
     return "_LastJoinedServer";
 }

@@ -133,6 +133,18 @@ class CmdPlayer(CmdPositioner):
         """Releases a key"""
         self.conn.send(b"custom.key.release", key.upper())
 
+    def getHealth(self):
+        return int(self.conn.sendReceive(b"custom.player.getHealth"))
+
+    def setHealth(self, health):
+        return self.conn.send(b"custom.player.setHealth", health)
+
+    def getGamemode(self):
+        return int(self.conn.sendReceive(b"custom.player.getGamemode"))
+
+    def closeGUI(self):
+        return self.conn.send(b"custom.player.closeGUI")
+
 class CmdCamera:
     def __init__(self, connection):
         self.conn = connection

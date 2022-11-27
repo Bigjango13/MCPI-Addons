@@ -18,6 +18,7 @@ void press_button_from_key(bool press, std::string key);
 
 unsigned char *get_minecraft();
 unsigned char *get_level();
+unsigned char *get_player();
 unsigned char *get_inventory();
 
 void offsetCords_float(unsigned char *offsetData, float *x, float *y, float *z);

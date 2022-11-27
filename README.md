@@ -44,6 +44,12 @@ It adds these:
   - `custom.world.particle` (`mc.particle(x, y, z, particle)`) Spawns the particle at (x,y,z).
   - `custom.world.dir` (`mc.world.dir()`) Get the world folder.
   - `custom.world.name` (`mc.world.name()`) Get the world name.
+- `custom.player`
+  - `custom.player.getHealth` (`mc.player.getHealth()`) Returns the players health.
+  - `custom.player.setHealth` (`mc.player.setHealth(health)`) Sets the players health.
+  - `custom.player.closeGUI` (`mc.player.closeGUI()`) Closes the current screen.
+  - `custom.player.getGamemode` (`mc.player.getGamemode()`) Returns the players gamemode.
+
 
 I want to add more so please give me suggestions.
 
@@ -51,9 +57,6 @@ I want to add more so please give me suggestions.
 
 I am going to add theses features someday, but they aren't here now.
 
-- `player.getHealth() -> int` Returns the players health.
-- `playere.setHealth(health: int)` Sets the players health.
-- `player.getGamemode() -> int` Gets the players gamemode.
 - `player.setGamemode(gamemode: int)` Gets the players gamemode.
 - `player.getOxygen() -> int` Gets the player oxygen.
 - `player.setOxygen(oxygen: int)` Sets the players oxygen.
@@ -115,6 +118,7 @@ A list of tiles can be found [here](https://wiki.mcpirevival.tk/wiki/Minecraft:_
   - Improved docs.
   - Many breaking API changes.
   - Many internal changes.
+  - Added `custom.player.getHealth`, `custom.player.setHealth`, `custom.player.closeGUI`, and `custom.player.getGamemode`.
 
 - **1.0.3**
   - Added `world.getBlocks`, `custom.getBlocks3D`.

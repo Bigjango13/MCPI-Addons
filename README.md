@@ -49,7 +49,8 @@ It adds these:
   - `custom.player.setHealth` (`mc.player.setHealth(health)`) Sets the players health.
   - `custom.player.closeGUI` (`mc.player.closeGUI()`) Closes the current screen.
   - `custom.player.getGamemode` (`mc.player.getGamemode()`) Returns the players gamemode.
-
+- `custom.entity`
+  - `custom.entity.spawn` (`mc.entity.spawn(id, x, y, z, health = -1, dir = (0, 0), data = 0)`) spawns an entity of type `id` at `x, y, z`, with `health` health (or fuse/lifetime) pointing in `dir` direction with `data` data.
 
 I want to add more so please give me suggestions.
 
@@ -107,9 +108,16 @@ Here is a particle list I found at `0x107511` in `minecraft-pi`
 
 ### Tiles/Items
 
-A list of tiles can be found [here](https://wiki.mcpirevival.tk/wiki/Minecraft:_Pi_Edition_Complete_Block_List) and a list of items [here](https://wiki.mcpirevival.tk/wiki/Minecraft:_Pi_Edition_Complete_Item_List).
+A list of tiles can be found [here](https://mcpirevival.miraheze.org/wiki/Minecraft:_Pi_Edition_Complete_Block_List) and a list of items [here](https://mcpirevival.miraheze.org/wiki/Minecraft:_Pi_Edition_Complete_Item_List).
+
+### Entities
+
+A list of entities can be found [here](https://mcpirevival.miraheze.org/wiki/Minecraft:_Pi_Edition_Complete_Entity_List).
 
 ## Changelog
+
+- **1.1.1**
+  - Add basic entity spawning.
 
 - **1.1.0**
   - Fixed bug with causing args to be cut off at the first left parenthesis.
@@ -147,3 +155,9 @@ A list of tiles can be found [here](https://wiki.mcpirevival.tk/wiki/Minecraft:_
 
 Here is a screenshot of using overrides and particles:
 ![ ](https://i.imgur.com/I8d8I0G_d.webp?maxwidth=760&fidelity=grand)
+
+Here is a screenshot of using entity spawning with arrows and direction:
+![ ](https://cdn.discordapp.com/attachments/740287938453045401/1073048085250461746/pic.png)
+
+Here is a screenshot of using TNT entities and falling bedrock entities to make a cannon:
+![ ](https://cdn.discordapp.com/attachments/740287938453045401/1073369250984632441/pic.png)

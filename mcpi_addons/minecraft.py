@@ -91,6 +91,17 @@ class CmdEntity(CmdPositioner):
         """Clear the entities events"""
         self.conn.send(b"entity.events.clear", intFloor(args))
 
+    def spawn(self, id, x, y, z, health = -1, dir = (0, 0), data = 0):
+        """Spawn entity"""
+        return int(
+            self.conn.sendReceive(
+                b"custom.entity.spawn",
+                int(id), float(x), float(y), float(z),
+                int(health), float(dir[0]), float(dir[1]),
+                int(data)
+            )
+        )
+
 
 class CmdPlayer(CmdPositioner):
     """Methods for the host (Raspberry Pi) player"""

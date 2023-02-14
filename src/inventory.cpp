@@ -1,14 +1,15 @@
 #include <symbols/minecraft.h>
 
 #include "helpers.h"
+#include "extra.h"
 
-unsigned char *get_inventory() {
+uchar *get_inventory() {
     // Get minecraft and the player
-    unsigned char *minecraft = get_minecraft();
-    unsigned char *player = *(unsigned char **) (minecraft + Minecraft_player_property_offset);
+    uchar *minecraft = get_minecraft();
+    uchar *player = *(uchar **) (minecraft + Minecraft_player_property_offset);
     if (player != NULL) {
         // Get the player inventory
-        unsigned char *inventory = *(unsigned char **) (player + Player_inventory_property_offset);
+        uchar *inventory = *(uchar **) (player + Player_inventory_property_offset);
         return inventory;
     }
     // The player doesn't exist
@@ -20,9 +21,9 @@ ItemInstance *get_item_at_slot(int slot) {
     if (slot == -256) {
         return NULL;
     }
-    unsigned char *inventory = get_inventory();
+    uchar *inventory = get_inventory();
     if (inventory != NULL) {
-        unsigned char *inventory_vtable = *(unsigned char **) inventory;
+        uchar *inventory_vtable = *(uchar **) inventory;
         FillingContainer_getItem_t FillingContainer_getItem = *(FillingContainer_getItem_t *) (inventory_vtable + FillingContainer_getItem_vtable_offset);
         ItemInstance *inventory_item = (*FillingContainer_getItem)(inventory, slot);
         return inventory_item;
@@ -32,7 +33,7 @@ ItemInstance *get_item_at_slot(int slot) {
 
 // Gets the current slot
 int get_current_slot() {
-    unsigned char *inventory = get_inventory();
+    uchar *inventory = get_inventory();
     if (inventory != NULL) {
         // Get the slot number
         int selected_slot = *(int *) (inventory + Inventory_selectedSlot_property_offset);

@@ -1,15 +1,29 @@
 # MCPI Addons
 
-A Minecraft Pi Edition: Reborn mod to add more features to the API.
+A [Minecraft Pi Edition: Reborn]() mod to add more features to the API.
 
 ## Installing
 
-First you will need to install from pip, to do that you can use `pip3 install mcpi-addons`
-If you don't want to compile it (or can't) then you can grab the newest version from the releases page.
+First you will need to install the frontend from pip, to do that you can use `pip3 install mcpi-addons`.
+If you don't want to compile the backend (or can't) then you can grab the newest version from the releases page.
 
 ## Compiling
 
-Just run `./build.sh` to create the bianary and run `mv libextrapi.so ~/.minecraft-pi/mods` to install it.
+Just run `./build.sh` to create the binary and run `mv libextrapi.so ~/.minecraft-pi/mods` to install the mod, this is needed because MCPI doesn't support any of these extentions that this api adds, so a C++ mod is loaded to intercept `CommandServer::parse`.
+
+## How to use
+
+Here is a simple "Hello World" example:
+```python
+# Import the api
+from mcpi_addons.minecraft import Minecraft
+# Initialize the api (MCPI must be open and in a world at this time)
+mc = Minecraft.create()
+
+# Post to chat
+mc.postToChat("Hello world!")
+```
+For a tutorial see the 'Using the API' section of [stuffaboutcode.com](https://www.stuffaboutcode.com/p/minecraft.html?m=1).
 
 ## What does it do?
 
@@ -56,7 +70,7 @@ I want to add more so please give me suggestions.
 
 ## Todo list
 
-I am going to add theses features someday, but they aren't here now.
+I am going to add theses features someday, but they aren't here now. Feel free to create a PR that adds them or other features!
 
 - `player.setGamemode(gamemode: int)` Gets the players gamemode.
 - `player.getOxygen() -> int` Gets the player oxygen.

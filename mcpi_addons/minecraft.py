@@ -186,6 +186,18 @@ class CmdEvents:
     def clearAll(self):
         """Clear all old events"""
         self.conn.send(b"events.clear")
+        
+    def pollChatPosts(self):
+        s = self.conn.sendReceive(b"events.pollChatPosts").split("\0")
+
+        if not s[0]:
+            return None
+
+        messages = []
+        for i in range(0, len(s), 2):
+            messages.append(ChatEvent(*s[i:i+2]))
+
+        return messages
 
     def pollBlockHits(self):
         """Only triggered by sword => [BlockEvent]"""

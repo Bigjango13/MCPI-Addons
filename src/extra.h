@@ -18,7 +18,7 @@ static Player_getArmor_t Player_getArmor = (Player_getArmor_t) 0x8fda4;
 typedef void (*offsetCords_t)(uchar *offsetData, int *x, int *y, int *z);
 static offsetCords_t offsetCords = (offsetCords_t) 0x27c98;
 
-static uchar **Item_items = (uchar **) 0x17b250;
+static uchar **Item_items = (uchar **) 0x17b250; // Comment this out if you're using MCPI-Reborn Extended!
 
 typedef uchar *(*MobFactory_getStaticTestMob_t)(int mob, uchar *level);
 static MobFactory_getStaticTestMob_t MobFactory_getStaticTestMob = (MobFactory_getStaticTestMob_t) 0x18844;

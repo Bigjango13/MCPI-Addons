@@ -32,21 +32,15 @@ class BlockEvent:
 class ChatEvent:
     """An Event related to chat (e.g. posts)"""
 
-    POST = 0
-
-    def __init__(self, type, entityId, message):
-        self.type = type
-        self.entityId = entityId
+    def __init__(self, player, message):
+        self.player = player
         self.message = message
 
     def __repr__(self):
-        sType = {ChatEvent.POST: "ChatEvent.POST"}.get(self.type, "???")
+        return f'ChatEvent({self.player}, {self.message})')
 
-        return "ChatEvent(%s, %d, %s)" % (sType, self.entityId, self.message)
-
-    @staticmethod
-    def Post(entityId, message):
-        return ChatEvent(ChatEvent.POST, entityId, message)
+    def __str__(self):
+        return self.message
 
 
 class ProjectileEvent:

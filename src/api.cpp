@@ -2,20 +2,26 @@
 #include <fstream>
 #include <map>
 #include <string>
+#include <vector>
 
 #include <libreborn/libreborn.h>
+#include <symbols/minecraft.h>
 #include <mods/misc/misc.h>
+#include <mods/chat/chat.h>
 
 #include "api.h"
 #include "base64.h"
 #include "extra.h"
 #include "helpers.h"
 
+std::vector<std::string> chat_log = {};
+
 typedef std::string (*handle_t)(std::string command, std::string args, uchar *command_server);
 std::map<std::string, handle_t> &get_handlers() {
     static std::map<std::string, handle_t> handlers = {};
     return handlers;
 }
+
 void add_command_handler(std::string name, handle_t handle) {
     get_handlers()[name] = handle;
 }
@@ -392,6 +398,34 @@ std::string handle_entity(std::string command, std::string args, uchar *command_
     return "";
 }
 
+std::string handle_pollChatPosts(std::string command, std::string args, uchar *command_server) {
+    if (chat_log.size() == 0) {
+        return "\n";
+    }
+
+    std::string history = "";
+
+    for (const std::string& message : chat_log) {
+        history += message;
+        history.push_back('\0');
+    }
+
+    chat_log.clear();
+    history.pop_back();
+    return history + "\n";
+}
+
+HOOK(chat_send_message, void, (unsigned char *server_side_network_handler, char *username, char *message)) {
+    std::string log = std::string(username) + '\0' + std::string(message);
+    chat_log.push_back(log);
+    ensure_chat_send_message();
+    (*real_chat_send_message)(server_side_network_handler, username, message);
+
+    if (chat_log.size() > 64) {
+        chat_log.erase(chat_log.begin(), chat_log.begin() + (chat_log.size() - 3));
+    }
+}
+
 __attribute__((constructor)) static void init() {
     // Call the custom version of CommandServer_parse instead of the real one.
     overwrite_calls((void *) CommandServer_parse, (void *) CommandServer_parse_injection);
@@ -409,4 +443,6 @@ __attribute__((constructor)) static void init() {
     add_command_handler("custom.world", handle_world);
     add_command_handler("custom.player", handle_player);
     add_command_handler("custom.entity", handle_entity);
+    // Add the event handler for pollChatPosts
+    add_command_handler("events.pollChatPosts", handle_pollChatPosts);
 }

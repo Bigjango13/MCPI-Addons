@@ -186,18 +186,22 @@ class CmdEvents:
     def clearAll(self):
         """Clear all old events"""
         self.conn.send(b"events.clear")
-        
+
     def pollChatPosts(self):
+        """Triggered by chat => [ChatEvent]"""
         s = self.conn.sendReceive(b"events.pollChatPosts").split("\0")
+        messages = []
 
         if not s[0]:
             return None
 
-        messages = []
         for i in range(0, len(s), 2):
             messages.append(ChatEvent(*s[i:i+2]))
 
         return messages
+
+    def setChatLog(self, size: int=64):
+        self.conn.sendReceive(b"events.setChatLogSize", size)
 
     def pollBlockHits(self):
         """Only triggered by sword => [BlockEvent]"""
@@ -230,6 +234,9 @@ class CmdReborn:
 
     def __init__(self, connection):
         self.conn = connection
+
+    def getVersion(self):
+        return self.conn.sendReceive(b"reborn.getVersion")
 
     # TODO
 
@@ -282,6 +289,7 @@ class Minecraft:
         self.inventory = CmdInventory(connection)
         self.logging   = CmdLog(connection)
         self.world     = CmdWorld(connection)
+        self.reborn    = CmdReborn(connection)
 
     def getBlock(self, *args):
         """Get block (x,y,z) => id:int"""

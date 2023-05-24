@@ -2,7 +2,6 @@
 #include <fstream>
 #include <map>
 #include <string>
-#include <vector>
 
 #include <libreborn/libreborn.h>
 #include <symbols/minecraft.h>
@@ -15,6 +14,7 @@
 #include "helpers.h"
 
 std::vector<std::string> chat_log = {};
+int chat_log_size = 64;
 
 typedef std::string (*handle_t)(std::string command, std::string args, uchar *command_server);
 std::map<std::string, handle_t> &get_handlers() {
@@ -407,6 +407,7 @@ std::string handle_pollChatPosts(std::string command, std::string args, uchar *c
 
     for (const std::string& message : chat_log) {
         history += message;
+        // Use a null byte instead of pipes so I don't have to deal with escapping
         history.push_back('\0');
     }
 
@@ -415,14 +416,27 @@ std::string handle_pollChatPosts(std::string command, std::string args, uchar *c
     return history + "\n";
 }
 
+std::string handle_setChatLogSize(std::string command, std::string args, uchar *command_server) {
+    try {
+        chat_log_size = std::stoi(args);
+        return "1\n";
+    } catch (const std::invalid_argument& e) {
+        return "\n";
+    }
+}
+
+std::string handle_getVersion(std::string command, std::string args, uchar *command_server) {
+    return std::string(*minecraft_pi_version) + "\n";
+}
+
 HOOK(chat_send_message, void, (unsigned char *server_side_network_handler, char *username, char *message)) {
     std::string log = std::string(username) + '\0' + std::string(message);
     chat_log.push_back(log);
     ensure_chat_send_message();
     (*real_chat_send_message)(server_side_network_handler, username, message);
 
-    if (chat_log.size() > 64) {
-        chat_log.erase(chat_log.begin(), chat_log.begin() + (chat_log.size() - 3));
+    if (chat_log.size() > chat_log_size) {
+        chat_log.erase(chat_log.begin());
     }
 }
 
@@ -443,6 +457,9 @@ __attribute__((constructor)) static void init() {
     add_command_handler("custom.world", handle_world);
     add_command_handler("custom.player", handle_player);
     add_command_handler("custom.entity", handle_entity);
-    // Add the event handler for pollChatPosts
+    // Add handlers for chat logging
     add_command_handler("events.pollChatPosts", handle_pollChatPosts);
+    add_command_handler("events.setChatLogSize", handle_setChatLogSize);
+    // Version stuff
+    add_command_handler("reborn.getVersion", handle_getVersion);
 }

@@ -236,6 +236,7 @@ class CmdReborn:
         self.conn = connection
 
     def getVersion(self):
+        """Gets the title screen text"""
         return self.conn.sendReceive(b"reborn.getVersion")
 
     # TODO

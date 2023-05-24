@@ -37,7 +37,7 @@ class ChatEvent:
         self.message = message
 
     def __repr__(self):
-        return f'ChatEvent({self.player}, {self.message})')
+        return f'ChatEvent({self.player}: "{self.message}")')
 
     def __str__(self):
         return self.message

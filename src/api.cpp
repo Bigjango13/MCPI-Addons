@@ -5,6 +5,7 @@
 
 #include <libreborn/libreborn.h>
 #include <symbols/minecraft.h>
+#include <mods/feature/feature.h>
 #include <mods/misc/misc.h>
 #include <mods/chat/chat.h>
 
@@ -429,6 +430,10 @@ std::string handle_getVersion(std::string command, std::string args, uchar *comm
     return std::string(*minecraft_pi_version) + "\n";
 }
 
+std::string handle_getFeature(std::string command, std::string args, uchar *command_server) {
+    return feature_has(args.c_str(), server_disabled) ? "1\n" : "\n";
+}
+
 HOOK(chat_send_message, void, (unsigned char *server_side_network_handler, char *username, char *message)) {
     std::string log = std::string(username) + '\0' + std::string(message);
     chat_log.push_back(log);
@@ -460,6 +465,7 @@ __attribute__((constructor)) static void init() {
     // Add handlers for chat logging
     add_command_handler("events.pollChatPosts", handle_pollChatPosts);
     add_command_handler("events.setChatLogSize", handle_setChatLogSize);
-    // Version stuff
+    // Reborn class
     add_command_handler("reborn.getVersion", handle_getVersion);
+    add_command_handler("reborn.getFeature", handle_getFeature);
 }

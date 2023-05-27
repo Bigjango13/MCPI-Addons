@@ -232,6 +232,9 @@ class CmdInventory:
 class CmdReborn:
     """Reborn"""
 
+    def __init__(self, connection):
+        self.conn = connection
+
     def getVersion(self):
         """Returns the game's title => str"""
         return self.conn.sendReceive(b"reborn.getVersion")

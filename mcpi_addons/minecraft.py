@@ -189,7 +189,7 @@ class CmdEvents:
 
     def pollChatPosts(self):
         """Triggered by chat => [ChatEvent]"""
-        s = self.conn.sendReceive(b"events.pollChatPosts").split("\0")
+        s = self.conn.sendReceive(b"events.chat.posts").split("\0")
         messages = []
 
         if not s[0]:
@@ -201,7 +201,8 @@ class CmdEvents:
         return messages
 
     def setChatLog(self, size: int=64):
-        self.conn.sendReceive(b"events.setChatLogSize", size)
+        """Clears all logged messages"""
+        self.conn.sendReceive(b"events.chat.size", size)
 
     def pollBlockHits(self):
         """Only triggered by sword => [BlockEvent]"""

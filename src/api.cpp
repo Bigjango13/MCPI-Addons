@@ -399,39 +399,45 @@ std::string handle_entity(std::string command, std::string args, uchar *command_
     return "";
 }
 
-std::string handle_pollChatPosts(std::string command, std::string args, uchar *command_server) {
-    if (chat_log.size() == 0) {
-        return "\n";
+std::string handle_chatLog(std::string command, std::string args, uchar *command_server) {
+    if (command == "events.chat.posts") {
+        if (chat_log.size() == 0) {
+            return "\n";
+        }
+
+        std::string history = "";
+
+        for (const std::string& message : chat_log) {
+            history += message;
+            // Use a null byte instead of pipes so I don't have to deal with escapping
+            history.push_back('\0');
+        }
+
+        chat_log.clear();
+        history.pop_back();
+        return history + "\n";
+    }
+    else if (command == "events.chat.size") {
+        try {
+            chat_log_size = std::stoi(args);
+            return "1\n";
+        } catch (const std::invalid_argument& e) {
+            return "\n";
+        }
     }
 
-    std::string history = "";
+    return "";
+}
 
-    for (const std::string& message : chat_log) {
-        history += message;
-        // Use a null byte instead of pipes so I don't have to deal with escapping
-        history.push_back('\0');
+std::string handle_reborn(std::string command, std::string args, uchar *command_server) {
+    if (command == "reborn.get.version") {
+        return std::string(*minecraft_pi_version) + "\n";
+    }
+    else if (command == "reborn.get.feature") {
+        return feature_has(args.c_str(), server_disabled) ? "1\n" : "\n";
     }
 
-    chat_log.clear();
-    history.pop_back();
-    return history + "\n";
-}
-
-std::string handle_setChatLogSize(std::string command, std::string args, uchar *command_server) {
-    try {
-        chat_log_size = std::stoi(args);
-        return "1\n";
-    } catch (const std::invalid_argument& e) {
-        return "\n";
-    }
-}
-
-std::string handle_getVersion(std::string command, std::string args, uchar *command_server) {
-    return std::string(*minecraft_pi_version) + "\n";
-}
-
-std::string handle_getFeature(std::string command, std::string args, uchar *command_server) {
-    return feature_has(args.c_str(), server_disabled) ? "1\n" : "\n";
+    return "";
 }
 
 HOOK(chat_send_message, void, (unsigned char *server_side_network_handler, char *username, char *message)) {
@@ -463,9 +469,7 @@ __attribute__((constructor)) static void init() {
     add_command_handler("custom.player", handle_player);
     add_command_handler("custom.entity", handle_entity);
     // Add handlers for chat logging
-    add_command_handler("events.pollChatPosts", handle_pollChatPosts);
-    add_command_handler("events.setChatLogSize", handle_setChatLogSize);
+    add_command_handler("events.chat", handle_chatLog);
     // Reborn class
-    add_command_handler("reborn.getVersion", handle_getVersion);
-    add_command_handler("reborn.getFeature", handle_getFeature);
+    add_command_handler("reborn.get", handle_reborn);
 }

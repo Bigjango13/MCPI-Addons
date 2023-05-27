@@ -238,11 +238,11 @@ class CmdReborn:
 
     def getVersion(self):
         """Returns the game's title => str"""
-        return self.conn.sendReceive(b"reborn.getVersion")
+        return self.conn.sendReceive(b"reborn.get.version")
 
     def getFeature(self, feature):
         """Returns wheater feature exists and is enabled => bool"""
-        return bool(self.conn.sendReceive(b"reborn.getFeature", feature))
+        return bool(self.conn.sendReceive(b"reborn.get.feature", feature))
 
 
 class CmdLog:

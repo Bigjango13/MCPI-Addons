@@ -232,14 +232,14 @@ class CmdInventory:
 class CmdReborn:
     """Reborn"""
 
-    def __init__(self, connection):
-        self.conn = connection
-
     def getVersion(self):
-        """Gets the title screen text"""
+        """Returns the game's title => str"""
         return self.conn.sendReceive(b"reborn.getVersion")
 
-    # TODO
+    def getFeature(self, feature):
+        """Returns wheater feature exists and is enabled => bool"""
+        return bool(self.conn.sendReceive(b"reborn.getFeature", feature))
+
 
 class CmdLog:
     """Logging"""

@@ -193,7 +193,7 @@ class CmdEvents:
         messages = []
 
         if not s[0]:
-            return None
+            return []
 
         for i in range(0, len(s), 2):
             messages.append(ChatEvent(*s[i:i+2]))

@@ -6,7 +6,7 @@ from os.path import exists
 from .block import Block
 from .connection import Connection
 from .entity import Entity
-from .event import BlockEvent, ChatEvent, ProjectileEvent
+from .event import BlockEvent
 from .PNBT import read_file
 from .util import flatten
 from .vec3 import Vec3
@@ -188,21 +188,15 @@ class CmdEvents:
         self.conn.send(b"events.clear")
 
     def pollChatPosts(self):
-        """Triggered by chat => [ChatEvent]"""
-        s = self.conn.sendReceive(b"events.chat.posts").split("\0")
-        messages = []
-
-        if not s[0]:
+        """Gets displayed messages => [string]"""
+        ret = self.conn.sendReceive(b"events.chat.posts")
+        if ret == '':
             return []
+        return ret.split("\0")
 
-        for i in range(0, len(s), 2):
-            messages.append(ChatEvent(*s[i:i+2]))
-
-        return messages
-
-    def setChatLog(self, size: int=64):
-        """Clears all logged messages"""
-        self.conn.sendReceive(b"events.chat.size", size)
+    def setChatLog(self, size: int = 64):
+        """Clears the log and sets a log size"""
+        self.conn.send(b"events.chat.size", int(size))
 
     def pollBlockHits(self):
         """Only triggered by sword => [BlockEvent]"""
@@ -238,11 +232,11 @@ class CmdReborn:
 
     def getVersion(self):
         """Returns the game's title => str"""
-        return self.conn.sendReceive(b"reborn.get.version")
+        return self.conn.sendReceive(b"custom.reborn.version")
 
     def getFeature(self, feature):
         """Returns wheater feature exists and is enabled => bool"""
-        return bool(self.conn.sendReceive(b"reborn.get.feature", feature))
+        return self.conn.sendReceive(b"custom.reborn.feature", feature) == "true"
 
 
 class CmdLog:
@@ -389,7 +383,7 @@ class Minecraft:
         self.conn.send(b"custom.inventory")
 
     def override(self, before, after):
-        """Overrides a tile ot item"""
+        """Overrides a tile or item"""
         self.conn.send(b"custom.override", before, after)
 
     def resetOverrides(self):

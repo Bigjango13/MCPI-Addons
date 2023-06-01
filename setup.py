@@ -5,9 +5,9 @@ with open("README.md", "r", encoding="utf-8") as f:
 
 setuptools.setup(
     name="MCPI-Addons",
-    version="1.1.1",
+    version="1.2.0",
     author="Bigjango13",
-    description="An extention of the Minecraft Pi API.",
+    description="An extension of the Minecraft Pi API.",
     long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://github.com/Bigjango13/MCPI-Addons",

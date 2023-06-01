@@ -1,8 +1,8 @@
 #include <symbols/minecraft.h>
 
 typedef unsigned char uchar;
-typedef uchar *(*getEntitiyById_t)(uchar *level, int entityId);
-static getEntitiyById_t getEntitiyById = (getEntitiyById_t) 0xa45a4;
+typedef uchar *(*getEntityById_t)(uchar *level, int entityId);
+static getEntityById_t getEntityById = (getEntityById_t) 0xa45a4;
 
 static uint32_t Entity_id_property_offset = 0x1c; // int32_t
 static uint32_t AgableMob_age_property_offset = 0xbfc; // int32_t

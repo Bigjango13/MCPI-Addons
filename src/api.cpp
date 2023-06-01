@@ -14,9 +14,6 @@
 #include "extra.h"
 #include "helpers.h"
 
-std::vector<std::string> chat_log = {};
-int chat_log_size = 64;
-
 typedef std::string (*handle_t)(std::string command, std::string args, uchar *command_server);
 std::map<std::string, handle_t> &get_handlers() {
     static std::map<std::string, handle_t> handlers = {};
@@ -165,7 +162,7 @@ std::string handle_override(std::string command, std::string args, uchar *comman
         // Overrides a tile (-1 .. 256).
         // Makes sure the tiles exists and is valid.
         if (Tile_tiles[after] != NULL && after <= 256 && before <= 256) {
-            // Caches the orginal block so that it can be restored
+            // Caches the original block so that it can be restored
             if (Tiles_backup[before] == NULL) Tiles_backup[before] = Tile_tiles[before];
             if (Tiles_backup[after] == NULL) Tiles_backup[after] = Tile_tiles[after];
             Tile_tiles[before] = Tiles_backup[after];
@@ -173,7 +170,7 @@ std::string handle_override(std::string command, std::string args, uchar *comman
     } else {
         // Overrides an item (256 .. 511)
         if (Item_items[after] != NULL && before <= 511) {
-            // Caches the orginal item so that it can be restored
+            // Caches the original item so that it can be restored
             if (Items_backup[before] == NULL) Items_backup[before] = Item_items[before];
             if (Items_backup[after] == NULL) Items_backup[after] = Item_items[after];
             Item_items[before] = Items_backup[after];
@@ -236,7 +233,7 @@ std::string handle_getBlocks(std::string command, std::string args, uchar *comma
     ret.pop_back();
     std::ofstream tempFile(tempFilename);
     tempFile << ret + "\n";
-    // Return the filename for openning.
+    // Return the filename for opening.
     return tempFilename+"\n";
 }
 
@@ -273,7 +270,7 @@ std::string handle_username(std::string command, std::string args, uchar *comman
         std::string name = base64_decode(args);
         for (uchar *player : get_players()) {
             std::string *player_username = (std::string *) (player + Player_username_property_offset);
-            // Loop throught players to try and find the player with the right username
+            // Loop through players to try and find the player with the right username
             if (*player_username == name) {
                 // The user exists! Now get the id and return it.
                 uint32_t id = *(uint32_t *) (player + Entity_id_property_offset);
@@ -399,56 +396,47 @@ std::string handle_entity(std::string command, std::string args, uchar *command_
     return "";
 }
 
-std::string handle_chatLog(std::string command, std::string args, uchar *command_server) {
+static std::vector<std::string> chat_log = {};
+static int chat_log_size = 64;
+std::string handle_chat_poll(std::string command, std::string args, uchar *command_server) {
     if (command == "events.chat.posts") {
         if (chat_log.size() == 0) {
             return "\n";
         }
 
         std::string history = "";
-
-        for (const std::string& message : chat_log) {
+        for (const std::string &message : chat_log) {
             history += message;
             // Use a null byte instead of pipes so I don't have to deal with escapping
             history.push_back('\0');
         }
-
         chat_log.clear();
         history.pop_back();
         return history + "\n";
+    } else if (command == "events.chat.size") {
+        int size = 0;
+        sscanf(args.c_str(), "%i", &size);
+        chat_log_size = size;
     }
-    else if (command == "events.chat.size") {
-        try {
-            chat_log_size = std::stoi(args);
-            return "1\n";
-        } catch (const std::invalid_argument& e) {
-            return "\n";
-        }
-    }
-
     return "";
 }
 
 std::string handle_reborn(std::string command, std::string args, uchar *command_server) {
-    if (command == "reborn.get.version") {
+    if (command == "custom.reborn.version") {
         return std::string(*minecraft_pi_version) + "\n";
+    } else if (command == "custom.reborn.feature") {
+        return feature_has(args.c_str(), server_disabled) ? "true\n" : "false\n";
     }
-    else if (command == "reborn.get.feature") {
-        return feature_has(args.c_str(), server_disabled) ? "1\n" : "\n";
-    }
-
     return "";
 }
 
-HOOK(chat_send_message, void, (unsigned char *server_side_network_handler, char *username, char *message)) {
-    std::string log = std::string(username) + '\0' + std::string(message);
-    chat_log.push_back(log);
-    ensure_chat_send_message();
-    (*real_chat_send_message)(server_side_network_handler, username, message);
-
+static Gui_addMessage_t Gui_addMessage_original;
+void Gui_addMessage_injection(unsigned char *gui, std::string const &text) {
+    chat_log.push_back(text);
     if (chat_log.size() > chat_log_size) {
         chat_log.erase(chat_log.begin());
     }
+    (*Gui_addMessage_original)(gui, text);
 }
 
 __attribute__((constructor)) static void init() {
@@ -469,7 +457,12 @@ __attribute__((constructor)) static void init() {
     add_command_handler("custom.player", handle_player);
     add_command_handler("custom.entity", handle_entity);
     // Add handlers for chat logging
-    add_command_handler("events.chat", handle_chatLog);
+    add_command_handler("events.chat", handle_chat_poll);
     // Reborn class
-    add_command_handler("reborn.get", handle_reborn);
+    add_command_handler("custom.reborn", handle_reborn);
+
+    // Gui_addMessage injection
+    void *bl_addr = (void *) 0x27a2c;
+    Gui_addMessage_original = (Gui_addMessage_t) extract_from_bl_instruction((uchar*) bl_addr);
+    overwrite_calls((void *) Gui_addMessage_original, (void *) Gui_addMessage_injection);
 }

@@ -29,20 +29,6 @@ class BlockEvent:
         return BlockEvent(BlockEvent.HIT, x, y, z, face, entityId)
 
 
-class ChatEvent:
-    """An Event related to chat (e.g. posts)"""
-
-    def __init__(self, player, message):
-        self.player = player
-        self.message = message
-
-    def __repr__(self):
-        return f'ChatEvent({self.player}: "{self.message}")')
-
-    def __str__(self):
-        return self.message
-
-
 class ProjectileEvent:
     """An Event related to projectiles (e.g. placed, removed, hit)"""
 

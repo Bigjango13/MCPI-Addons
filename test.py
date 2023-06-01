@@ -55,11 +55,11 @@ class test_player:
 
 @test_cls
 class test_override:
-    def tileInvaild():
-        """Override a tile with an invaild tile"""
+    def tileInvalid():
+        """Override a tile with an invalid tile"""
         mc.override(1, 19)
 
-    def tileVaild():
+    def tileValid():
         """Override a tile with a tile"""
         mc.override(2, 3)
 
@@ -67,11 +67,11 @@ class test_override:
         """Override a tile with an item"""
         mc.override(4, 256)
 
-    def itemInvaild():
-        """Override an item with an invaild item"""
+    def itemInvalid():
+        """Override an item with an invalid item"""
         mc.override(257, 400)
 
-    def itemVaild():
+    def itemValid():
         """Override a tile with a tile"""
         mc.override(258, 270)
 

@@ -1,15 +1,17 @@
 # MCPI Addons
 
-A [Minecraft Pi Edition: Reborn]() mod to add more features to the API.
+A Minecraft Pi Edition: Reborn mod to add more features to the API.
+
+**Note:** requires Reborn v2.4.8 or later.
 
 ## Installing
 
 First you will need to install the frontend from pip, to do that you can use `pip3 install mcpi-addons`.
-If you don't want to compile the backend (or can't) then you can grab the newest version from the releases page.
+If you don't want to (or can't) compile the backend then you can grab the newest version from the releases page.
 
 ## Compiling
 
-Just run `./build.sh` to create the binary and run `mv libextrapi.so ~/.minecraft-pi/mods` to install the mod, this is needed because MCPI doesn't support any of these extentions that this api adds, so a C++ mod is loaded to intercept `CommandServer::parse`.
+Just run `./build.sh` to create the binary and run `mv libextrapi.so ~/.minecraft-pi/mods` to install the mod, this is needed because MCPI doesn't support any of these extensions that this api adds, so a C++ mod is loaded to intercept `CommandServer::parse`.
 
 ## How to use
 
@@ -23,7 +25,7 @@ mc = Minecraft.create()
 # Post to chat
 mc.postToChat("Hello world!")
 ```
-For a tutorial see the 'Using the API' section of [stuffaboutcode.com](https://www.stuffaboutcode.com/p/minecraft.html?m=1).
+For a tutorial see the 'Using the API' section of [stuffaboutcode.com](https://www.stuffaboutcode.com/p/minecraft.html).
 
 ## What does it do?
 
@@ -65,6 +67,12 @@ It adds these:
   - `custom.player.getGamemode` (`mc.player.getGamemode()`) Returns the players gamemode.
 - `custom.entity`
   - `custom.entity.spawn` (`mc.entity.spawn(id, x, y, z, health = -1, dir = (0, 0), data = 0)`) spawns an entity of type `id` at `x, y, z`, with `health` health (or fuse/lifetime) pointing in `dir` direction with `data` data.
+- `custom.reborn`
+  - `custom.reborn.getFeature` (`mc.reborn.getFeature(feature: string) -> bool`) Gets the status of a reborn feature
+  - `custom.reborn.getVersion` (`mc.reborn.getVersion() -> string`) Gets the reborn version
+- `events.chat`
+  - `events.chat.post` (`mc.events.pollChatPosts() -> [string]`) return a list of messages shown in client side chat
+  - `events.chat.size` (`mc.events.setChatSize(size = 64)`) clears the chat list and resets the size
 
 I want to add more so please give me suggestions.
 
@@ -72,15 +80,13 @@ I want to add more so please give me suggestions.
 
 I am going to add theses features someday, but they aren't here now. Feel free to create a PR that adds them or other features!
 
-- `player.setGamemode(gamemode: int)` Gets the players gamemode.
+- `player.setGamemode(gamemode: int)` Sets the players gamemode.
 - `player.getOxygen() -> int` Gets the player oxygen.
 - `player.setOxygen(oxygen: int)` Sets the players oxygen.
 - `player.getInventory() -> int[]` Gets the player inventory.
 - `player.setInventory(inventory: int[])` Sets the player inventory.
 - `entity.getArmor(id: int) -> int[4]` Gets the players armor.
 - `entity.setArmor(helmet: int, chestplate: int, leggings: int, boots: int)` Sets the players armor.
-- `reborn.getFeature(feature: string, default: bool = False) -> bool` Gets the status of a reborn feature.
-- `reborn.getVersion() -> string` Gets the reborn version.
 - `camera.getCameraState() -> int` Gets the camera state.
 - `camera.setCameraState(state: int)` Sets the camera state.
 - `minecraft.getVersion() -> str` 0.1.0 or 0.1.1, will be determined at compile time and will require Legacy support.
@@ -88,7 +94,7 @@ I am going to add theses features someday, but they aren't here now. Feel free t
 
 ## Known bugs
 
-- Using the particle `iconcrack` with `mc.particle` crashes the game, but using an invaild particle name is fine.
+- Using the particle `iconcrack` with `mc.particle` crashes the game, but using an invalid particle name is fine.
 - `postToClient` really doesn't like it when you use `\n`. When posted they might also post a lot of garbage to server side chat.
 
 ## Extras
@@ -98,12 +104,10 @@ One day all of these will be supported.
 
 * [x] `getBlocks`
 * [x] `getPlayerEntityId`
+* [x] `events.pollChatPosts`
 * [ ] `player/entity.getRotation`
 * [ ] `player/entity.getPitch`
 * [ ] `player/entity.getDirection`
-* [ ] `events.pollChatPosts`
-* [ ] ChatEvent
-
 
 ### Particles
 
@@ -130,6 +134,9 @@ A list of entities can be found [here](https://mcpirevival.miraheze.org/wiki/Min
 
 ## Changelog
 
+- **1.2.0**
+  - Add `reborn.getVersion`, `reborn.getFeature`, `events.chat.posts`, and `events.chat.size`, by [Red-exe-Engineer](https://github.com/Red-exe-Engineer)
+
 - **1.1.1**
   - Add basic entity spawning.
 
@@ -155,7 +162,7 @@ A list of entities can be found [here](https://mcpirevival.miraheze.org/wiki/Min
   - Added `custom.getUsernames`.
 
 - **1.0.0**
-  - Stopped `getSlot` from crashing the game with invaild ids.
+  - Stopped `getSlot` from crashing the game with invalid ids.
   - Added `press`, `unpress`, `worldName`, `worldDir`, `particle`, `getOffset`, and logging (`debug`, `info`, `warn`, `err`).
   - Uploaded to pypi and github.
 

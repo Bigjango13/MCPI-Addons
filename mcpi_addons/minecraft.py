@@ -11,7 +11,8 @@ from .PNBT import read_file
 from .util import flatten
 from .vec3 import Vec3
 
-""" Minecraft Pi low level api v0.1.1 with addons.
+"""
+    Minecraft Pi low level api v0.1.1 with addons.
 
     Note: many methods have the parameter *arg. This solution makes it
     simple to allow different types, and variable number of arguments.
@@ -21,7 +22,8 @@ from .vec3 import Vec3
     (Because of this, it's possible to "erase" arguments. CmdPlayer removes
      entityId, by injecting [] that flattens to nothing)
 
-    @author: Aron Nieminen, Mojang AB"""
+    @author: Aron Nieminen, Mojang AB
+"""
 
 
 def intFloor(*args):
@@ -30,7 +32,6 @@ def intFloor(*args):
 
 class CmdPositioner:
     """Methods for setting and getting positions"""
-
     def __init__(self, connection, packagePrefix):
         self.conn = connection
         self.pkg = packagePrefix
@@ -60,13 +61,14 @@ class CmdPositioner:
 
 class CmdEntity(CmdPositioner):
     """Methods for entities"""
-
     def __init__(self, connection):
         CmdPositioner.__init__(self, connection, b"entity")
 
     def getEntities(self):
-        """Return a list of entities near entity => [[entityId:int,entityTypeId:int,entityTypeName:str,posX:float,posY:float,posZ:float]]"""
-        """If distanceFromPlayerInBlocks:int is not specified then default 10 blocks will be used"""
+        """
+            Return a list of entities near entity => [[entityId:int,entityTypeId:int,entityTypeName:str,posX:float,posY:float,posZ:float
+            If distanceFromPlayerInBlocks:int is not specified then default 10 blocks will be used
+        """
         s = self.conn.sendReceive(b"entity.getEntities")
         entities = [e for e in s.split("|") if e]
         return [
@@ -93,6 +95,10 @@ class CmdEntity(CmdPositioner):
 
     def spawn(self, id, x, y, z, health = -1, dir = (0, 0), data = 0):
         """Spawn entity"""
+        if isinstance(id, Entity):
+            # `data` overrides `id.data`
+            id, data = id.id, data or id.data
+
         return int(
             self.conn.sendReceive(
                 b"custom.entity.spawn",

@@ -222,11 +222,17 @@ class CmdInventory:
 
     def unsafeGive(self, id=-2, auxiliary=-2, count=-2):
         """Sets the current slot to something else, this is unsafe and may crash the game"""
+        if isinstance(id, Block):
+            id, auxiliary = id.id, (id.data if auxiliary == -2 else auxiliary)
+
         args = "|".join(map(str, [id, auxiliary, count]))
         self.conn.sendReceive(b"custom.inventory.unsafeGive", args)
 
     def give(self, id=-2, auxiliary=-2, count=-2):
         """Sets the current slot to something else"""
+        if isinstance(id, Block):
+            id, auxiliary = id.id, (id.data if auxiliary == -2 else auxiliary)
+
         args = "|".join(map(str, [id, auxiliary, count]))
         self.conn.sendReceive(b"custom.inventory.give", args)
 

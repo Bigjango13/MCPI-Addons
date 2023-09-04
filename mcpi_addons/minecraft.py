@@ -396,6 +396,12 @@ class Minecraft:
 
     def override(self, before, after):
         """Overrides a tile or item"""
+        if isinstance(before, Block):
+            before = before.id
+
+        if isinstance(after, Block):
+            after = after.id
+
         self.conn.send(b"custom.override", before, after)
 
     def resetOverrides(self):

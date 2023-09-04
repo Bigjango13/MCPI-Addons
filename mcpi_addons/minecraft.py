@@ -217,7 +217,7 @@ class CmdInventory:
         self.conn = connection
 
     def getHeldItem(self):
-        ret = self.conn.sendReceive(b"custom.inventory.getSlot").split("|")
+        ret = list(map(int, self.conn.sendReceive(b"custom.inventory.getSlot").split("|")))
         return {"id": ret[0], "auxiliary": ret[1], "count": ret[2]}
 
     def unsafeGive(self, id=-2, auxiliary=-2, count=-2):

@@ -432,7 +432,7 @@ std::string handle_reborn(std::string command, std::string args, uchar *command_
 
 static Gui_addMessage_t Gui_addMessage_original;
 void Gui_addMessage_injection(unsigned char *gui, std::string const &text) {
-    chat_log.push_back(text);
+    chat_log.push_back(text.c_str());
     if (chat_log.size() > chat_log_size) {
         chat_log.erase(chat_log.begin());
     }

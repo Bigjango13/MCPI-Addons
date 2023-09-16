@@ -134,8 +134,12 @@ A list of entities can be found [here](https://mcpirevival.miraheze.org/wiki/Min
 
 ## Changelog
 
-- **1.2.0**
-  - Add `reborn.getVersion`, `reborn.getFeature`, `events.chat.posts`, and `events.chat.size`, by [Red-exe-Engineer](https://github.com/Red-exe-Engineer)
+- **1.2.1**, by [Red-exe-Engineer](https://github.com/Red-exe-Engineer)
+  - Update entity ids and Entity class on the python side
+  - Add the sheep class and item class
+
+- **1.2.0**, by [Red-exe-Engineer](https://github.com/Red-exe-Engineer)
+  - Add `reborn.getVersion`, `reborn.getFeature`, `events.chat.posts`, and `events.chat.size`
 
 - **1.1.1**
   - Add basic entity spawning.

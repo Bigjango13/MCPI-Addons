@@ -47,7 +47,6 @@ class Sheep(Entity):
 
 class Item(Entity):
     def __init__(self, data, name):
-        print(name, data)
         super().__init__(64, name, data)
 
     def __repr__(self):

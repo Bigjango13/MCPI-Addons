@@ -134,6 +134,9 @@ A list of entities can be found [here](https://mcpirevival.miraheze.org/wiki/Min
 
 ## Changelog
 
+- **1.2.2**, by [Red-exe-Engineer](https://github.com/Red-exe-Engineer)
+  - Remove `print()` call left in by mistake
+
 - **1.2.1**, by [Red-exe-Engineer](https://github.com/Red-exe-Engineer)
   - Update entity ids and Entity class on the python side
   - Add the sheep class and item class

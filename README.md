@@ -73,6 +73,8 @@ It adds these:
 - `events.chat`
   - `events.chat.post` (`mc.events.pollChatPosts() -> [string]`) return a list of messages shown in client side chat
   - `events.chat.size` (`mc.events.setChatSize(size = 64)`) clears the chat list and resets the size
+- `entity.getAllEntities`
+- `entity.getEntities`
 
 I want to add more so please give me suggestions.
 
@@ -134,8 +136,9 @@ A list of entities can be found [here](https://mcpirevival.miraheze.org/wiki/Min
 
 ## Changelog
 
-- **1.2.2**, by [Red-exe-Engineer](https://github.com/Red-exe-Engineer)
+- **1.2.2**
   - Remove `print()` call left in by mistake
+  - Add `entity.getEntities` and `entity.getAllEntities`
 
 - **1.2.1**, by [Red-exe-Engineer](https://github.com/Red-exe-Engineer)
   - Update entity ids and Entity class on the python side

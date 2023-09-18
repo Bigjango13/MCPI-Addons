@@ -430,6 +430,68 @@ std::string handle_reborn(std::string command, std::string args, uchar *command_
     return "";
 }
 
+std::string handle_getEntities(std::string command, std::string args, uchar *command_server) {
+    uchar *level = get_level();
+
+    int only_id = -1;
+    float srcx, srcy, srcz, dist = -1;
+    if (command == "entity.getEntities") {
+        // Parse args
+        int srcid = 0;
+        sscanf(args.c_str(), "%i,%f,%i", &srcid, &dist, &only_id);
+        uchar *src = getEntityById(level, srcid);
+        if (src == NULL) {
+            dist = -1;
+        } else {
+            // Get pos
+            srcx = *(float *) (src + Entity_x_property_offset);
+            srcy = *(float *) (src + Entity_y_property_offset);
+            srcz = *(float *) (src + Entity_z_property_offset);
+        }
+    }
+
+    std::string buf = "";
+    std::vector<uchar *> entities = *(std::vector<uchar *> *) (level + Level_entities_property_offset);
+    // Loop through and get all the data
+    for (uchar *entity : entities) {
+        // Get type id
+        uchar *entity_vtable = *(uchar **) entity;
+        Entity_getEntityTypeId_t Entity_getEntityTypeId = *(Entity_getEntityTypeId_t *) (entity_vtable + Entity_getEntityTypeId_vtable_offset);
+        int type_id = (*Entity_getEntityTypeId)();
+        if (only_id != -1 && only_id != type_id) {
+            // If we are looking for a entity with a certain id, only return that id
+            continue;
+        }
+
+        // Get pos
+        float x = *(float *) (entity + Entity_x_property_offset);
+        float y = *(float *) (entity + Entity_y_property_offset);
+        float z = *(float *) (entity + Entity_z_property_offset);
+        // Check taxicab distance
+        if (dist != -1) {
+            float taxi = abs(x - srcx) + abs(y - srcy) + abs(z - srcz);
+            if (taxi > dist) {
+                // Outside of range
+                continue;
+            }
+        }
+
+        // All good, now add it (id, type id, x, y, z)
+        int id = *(int *) (entity + Entity_id_property_offset);
+        buf +=
+            std::to_string(id) + "," + std::to_string(type_id) + ","
+            + std::to_string(z) + "," + std::to_string(y) + "," + std::to_string(z)
+            + "|";
+    }
+    // Return it
+    if (buf == "") {
+        return "\n";
+    }
+    buf.pop_back();
+    return buf + "\n";
+}
+
+
 static Gui_addMessage_t Gui_addMessage_original;
 void Gui_addMessage_injection(unsigned char *gui, std::string const &text) {
     chat_log.push_back(text);
@@ -460,6 +522,9 @@ __attribute__((constructor)) static void init() {
     add_command_handler("events.chat", handle_chat_poll);
     // Reborn class
     add_command_handler("custom.reborn", handle_reborn);
+    // More RaspberryJuice stuff
+    add_command_handler("entity.getEntities", handle_getEntities);
+    add_command_handler("entity.getAllEntities", handle_getEntities);
 
     // Gui_addMessage injection
     void *bl_addr = (void *) 0x27a2c;

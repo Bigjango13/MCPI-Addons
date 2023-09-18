@@ -62,23 +62,47 @@ class CmdPositioner:
 class CmdEntity(CmdPositioner):
     """Methods for entities"""
     def __init__(self, connection):
+        # https://mcpirevival.miraheze.org/wiki/Minecraft:_Pi_Edition_Complete_Entity_List
+        self.nameMap = {
+            # Misc
+            0: "Unknown",
+            # Animals
+            10: "Chicken", 11: "Cow", 12: "Pig", 13: "Sheep",
+            # Monsters
+            32: "Zombie", 33: "Creeper", 34: "Skeleton", 35: "Spider", 36: "PigZombie",
+            # Item/blocks
+            64: "ItemEntity", 65: "PrimedTnt", 66: "FallingTile",
+            # Projectiles (and paintings)
+            80: "Arrow", 81: "Snowball", 82: "ThrownEgg", 83: "Painting"
+        }
         CmdPositioner.__init__(self, connection, b"entity")
 
-    def getEntities(self):
+    def getEntities(self, id=0, distance=10, typeId=-1):
         """
             Return a list of entities near entity => [[entityId:int,entityTypeId:int,entityTypeName:str,posX:float,posY:float,posZ:float
             If distanceFromPlayerInBlocks:int is not specified then default 10 blocks will be used
         """
-        s = self.conn.sendReceive(b"entity.getEntities")
-        entities = [e for e in s.split("|") if e]
+        s = None;
+        if id == 0 and typeId == -1:
+           s = self.conn.sendReceive(b"entity.getAllEntities")
+        else:
+            s = self.conn.sendReceive(b"entity.getEntities", int(id), float(distance), int(typeId))
+
+        entities = [e.split(',') for e in s.split("|") if e]
         return [
             [
-                int(n.split(",")[0]),
-                int(n.split(",")[1]),
-                n.split(",")[2],
-                float(n.split(",")[3]),
-                float(n.split(",")[4]),
-                float(n.split(",")[5]),
+                # Entity ID
+                int(n[0]),
+                # Entity type ID
+                int(n[1]),
+                # Entity type name
+                self.nameMap.get(int(n[1]), "Invalid"),
+                # X
+                float(n[2]),
+                # Y
+                float(n[3]),
+                # Z
+                float(n[4])
             ]
             for n in entities
         ]

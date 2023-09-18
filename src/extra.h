@@ -27,8 +27,12 @@ static MobFactory_CreateMob_t MobFactory_CreateMob = (MobFactory_CreateMob_t) 0x
 typedef uchar *(*EntityFactory_CreateEntity_t)(int id, uchar *level);
 static EntityFactory_CreateEntity_t EntityFactory_CreateEntity = (EntityFactory_CreateEntity_t) 0x7d794;
 
+static uint8_t Level_entities_property_offset = 0x20;
 typedef uchar *(*Level_addEntity_t)(uchar *level, uchar *entity);
 static Level_addEntity_t Level_addEntity = (Level_addEntity_t) 0xa7cbc;
+
+typedef int (*Entity_getEntityTypeId_t)();
+static uint32_t Entity_getEntityTypeId_vtable_offset = 0xdc;
 
 typedef void (*Entity_moveTo_t)(uchar *entity, float x, float y, float z, float pitch, float yaw);
 static Entity_moveTo_t Entity_moveTo = (Entity_moveTo_t) 0x7a834;

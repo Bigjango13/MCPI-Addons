@@ -491,6 +491,55 @@ std::string handle_getEntities(std::string command, std::string args, uchar *com
     return buf + "\n";
 }
 
+std::string handle_sheepcolor(std::string command, std::string args, uchar *command_server) {
+    if (command == "entity.setSheepColor") {
+        int id, color;
+        sscanf(args.c_str(), "%i,%i", &id, &color);
+        
+        uchar *level = get_level();
+        uchar *mob = getEntityById(level, id);
+        
+        // Get type id
+        uchar *entity_vtable = *(uchar **) mob;
+        Entity_getEntityTypeId_t Entity_getEntityTypeId = *(Entity_getEntityTypeId_t *) (entity_vtable + Entity_getEntityTypeId_vtable_offset);
+        int type_id = (*Entity_getEntityTypeId)();
+        if (type_id != 13) { return "That mob is NOT a sheep.\n"; }
+        
+        // Fail
+        if (mob == NULL) {
+            return "Mob not found? Wrong id?";
+        } else {
+            Sheep_setColor(mob, color);
+            return "Color changed\n";                
+        }
+    }
+    return "";
+}
+
+std::string handle_setAge(std::string command, std::string args, uchar *command_server) {
+    if (command == "entity.setAge") {
+        int id, age;
+        sscanf(args.c_str(), "%i,%i", &id, &age);
+        
+        uchar *level = get_level();
+        uchar *mob = getEntityById(level, id);
+        
+        // Get type id
+        uchar *entity_vtable = *(uchar **) mob;
+        Entity_getEntityTypeId_t Entity_getEntityTypeId = *(Entity_getEntityTypeId_t *) (entity_vtable + Entity_getEntityTypeId_vtable_offset);
+        int type_id = (*Entity_getEntityTypeId)();
+        if ((type_id < 10) or (type_id > 13)  ) { return "That mob is NOT agable.\n"; } //only the aninals?
+        
+        // Fail
+        if (mob == NULL) {
+            return "Mob not found? Wrong id?";
+        } else {
+            AgableMob_setAge(mob, age);
+            return "Age changed\n";                
+        }
+    }
+    return "";
+}
 
 static Gui_addMessage_t Gui_addMessage_original;
 void Gui_addMessage_injection(unsigned char *gui, std::string const &text) {
@@ -525,6 +574,9 @@ __attribute__((constructor)) static void init() {
     // More RaspberryJuice stuff
     add_command_handler("entity.getEntities", handle_getEntities);
     add_command_handler("entity.getAllEntities", handle_getEntities);
+
+    add_command_handler("entity.setSheepColor", handle_sheepcolor);
+    add_command_handler("entity.setAge", handle_setAge);
 
     // Gui_addMessage injection
     void *bl_addr = (void *) 0x27a2c;

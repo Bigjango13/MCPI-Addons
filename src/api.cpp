@@ -341,10 +341,10 @@ std::string handle_entity(std::string command, std::string args, uchar *command_
     if (command == "custom.entity.spawn") {
         // Spawns and returns the id
         // Get pos
-        int id, health, data;
+        int id, health, age, data;
         float x, y, z;
         float dx, dy;
-        sscanf(args.c_str(), "%i,%f,%f,%f,%i,%f,%f,%i", &id, &x, &y, &z, &health, &dx, &dy, &data);
+        sscanf(args.c_str(), "%i,%f,%f,%f,%i,%i,%f,%f,%i", &id, &x, &y, &z, &health, &age, &dx, &dy, &data);
         // Offset cords
         uchar *offsetData = (uchar*)(command_server + 0x1c);
         offsetCords_float(offsetData, &x, &y, &z);
@@ -362,6 +362,10 @@ std::string handle_entity(std::string command, std::string args, uchar *command_
         // Set health
         if (health != -1) {
             *(int *)(mob + Mob_health_property_offset) = health;
+        }
+        // Set age
+        if (((id == 10) or (id == 11) or (id == 12) or (id == 13)) and (age != -1) ){//only the "animals" are ageable?
+            AgableMob_setAge(mob, age);
         }
         // Set data
         if (id == 66) {

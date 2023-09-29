@@ -132,6 +132,14 @@ class CmdEntity(CmdPositioner):
             )
         )
 
+    def setSheepColor(self, id, color):
+        """Set color on a specific sheep, mc.entity.setSheepColor(id, 2)"""
+        self.conn.send(b"custom.entity.setSheepColor", int(id), int(color))
+
+    def setAge(self, id, age):
+        """Set age on a specific animal mob (only animals) mc.entity.setAge(id, -20 * X) to change to a baby for X seconds"""
+        self.conn.send(b"custom.entity.setAge", int(id), int(age))
+
 
 class CmdPlayer(CmdPositioner):
     """Methods for the host (Raspberry Pi) player"""

@@ -392,6 +392,39 @@ std::string handle_entity(std::string command, std::string args, uchar *command_
         uint32_t entity_id = *(uint32_t *) (mob + Entity_id_property_offset);
         // Return the id
         return std::to_string(entity_id) + "\n";
+    } else if (command == "custom.entity.setAge") {
+        int id, age;
+        sscanf(args.c_str(), "%i,%i", &id, &age);
+
+        uchar *mob = getEntityById(level, id);
+        if (mob == NULL) return "";
+
+        // Get type id
+        uchar *entity_vtable = *(uchar **) mob;
+        Entity_getEntityTypeId_t Entity_getEntityTypeId = *(Entity_getEntityTypeId_t *) (entity_vtable + Entity_getEntityTypeId_vtable_offset);
+        int type_id = (*Entity_getEntityTypeId)();
+
+        // Only the animals agable
+        if (10 <= type_id && type_id <= 13) {
+            // Set age
+            AgableMob_setAge(mob, age);
+        }
+    } else if (command == "custom.entity.setSheepColor") {
+        int id, color;
+        sscanf(args.c_str(), "%i,%i", &id, &color);
+
+        uchar *mob = getEntityById(level, id);
+        if (mob == NULL) return "";
+
+        // Get type id
+        uchar *entity_vtable = *(uchar **) mob;
+        Entity_getEntityTypeId_t Entity_getEntityTypeId = *(Entity_getEntityTypeId_t *) (entity_vtable + Entity_getEntityTypeId_vtable_offset);
+        int type_id = (*Entity_getEntityTypeId)();
+
+        if (type_id == 13) {
+            // Set color
+            Sheep_setColor(mob, color);
+        }
     }
     return "";
 }
@@ -490,7 +523,6 @@ std::string handle_getEntities(std::string command, std::string args, uchar *com
     buf.pop_back();
     return buf + "\n";
 }
-
 
 static Gui_addMessage_t Gui_addMessage_original;
 void Gui_addMessage_injection(unsigned char *gui, std::string const &text) {

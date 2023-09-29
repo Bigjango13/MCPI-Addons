@@ -67,6 +67,8 @@ It adds these:
   - `custom.player.getGamemode` (`mc.player.getGamemode()`) Returns the players gamemode.
 - `custom.entity`
   - `custom.entity.spawn` (`mc.entity.spawn(id, x, y, z, health = -1, dir = (0, 0), data = 0)`) spawns an entity of type `id` at `x, y, z`, with `health` health (or fuse/lifetime) pointing in `dir` direction with `data` data.
+  - `custom.entity.setAge` (`mc.entity.setAge(id, age)`) changes an entities age, if it has an age (only animals do). If the age is negitive it will be a baby for `abs(age) / 20` seconds.
+  - `custom.entity.setSheepColor` (`mc.entity.setSheepColor(id, color)`) sets a sheeps color to `color`
 - `custom.reborn`
   - `custom.reborn.getFeature` (`mc.reborn.getFeature(feature: string) -> bool`) Gets the status of a reborn feature
   - `custom.reborn.getVersion` (`mc.reborn.getVersion() -> string`) Gets the reborn version
@@ -135,6 +137,9 @@ A list of tiles can be found [here](https://mcpirevival.miraheze.org/wiki/Minecr
 A list of entities can be found [here](https://mcpirevival.miraheze.org/wiki/Minecraft:_Pi_Edition_Complete_Entity_List).
 
 ## Changelog
+
+- **1.2.3**, by [Skjeggegubben](https://github.com/Skjeggegubben)
+  - Add `custom.entity.setAge` and `custom.entity.setSheepColor`
 
 - **1.2.2**
   - Remove `print()` call left in by mistake

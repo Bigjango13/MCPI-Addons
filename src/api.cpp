@@ -25,6 +25,10 @@ void add_command_handler(std::string name, handle_t handle) {
 }
 
 std::string CommandServer_parse_injection(uchar *command_server, ConnectedClient &client, std::string const& command) {
+    //Do some basic sanitizing on the input string command to prevent 'denial of service'.
+    if( ( command[ command.length()-2 ] != '\n')  || ( command[ command.length()-3 ] != ')') ) return "Fail\n";    
+    for (std::string required : { ".", "(" } ) { if (command.find( required ) == std::string::npos) return "Fail\n"; }
+    
     // Get the command, base is the name and root is the first two. For example:
     // command = "custom.logging.debug(Test)"
     // root_command = "custom.logging", base_command = "custom.logging.debug"

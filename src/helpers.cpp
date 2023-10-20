@@ -91,8 +91,7 @@ bool in_local_world() {
 }
 
 std::string get_world_name() {
-    if (in_local_world()) return name;
-    return "server";
+    return name;
 }
 
 std::string get_world_dir() {
@@ -109,6 +108,22 @@ static void Minecraft_selectLevel_injection(uchar *minecraft, std::string const&
     in_game = true;
 }
 
+static uchar *Minecraft_selectLevel_ServerLevel_injection(
+    uchar *serverlevel, uchar *storage, std::string const& level_name, LevelSettings const& settings, int param_5, uchar *dimension
+) {
+    // Call Original Method
+    typedef uchar *(*ServerLevel_t)(uchar *serverlevel, uchar *storage, std::string const& level_name, LevelSettings const& settings, int param_5, uchar *dimension);
+    ServerLevel_t ServerLevel = (ServerLevel_t) 0x7681c;
+    uchar *ret = ServerLevel(serverlevel, storage, level_name, settings, param_5, dimension);
+
+    // TODO: Get level dir too
+    //dir = level_dir;
+    name = level_name;
+    in_game = true;
+
+    return ret;
+}
+
 static void Minecraft_leaveGame_injection(uchar *minecraft, bool save_remote_level) {
     // Call Original Method
     (*Minecraft_leaveGame)(minecraft, save_remote_level);
@@ -117,9 +132,11 @@ static void Minecraft_leaveGame_injection(uchar *minecraft, bool save_remote_lev
 }
 
 __attribute__((constructor)) static void init() {
-    // Patch Minecraft::selectLevel in vtables
+    // Patch Minecraft::selectLevel in vtables (doesn't work for server mode, as reborn don't use the vtables)
     patch_address((void *) 0x1023f8 /* MinecraftApp::selectLevel */, (void *) Minecraft_selectLevel_injection);
     patch_address((void *) 0x102740 /* Minecraft::selectLevel */, (void *) Minecraft_selectLevel_injection);
+    // Patch Minecraft::selectLevel calling ServerLevel (for servers)
+    overwrite_call((void *) 0x16f84, (void *) Minecraft_selectLevel_ServerLevel_injection);
     // Patch Minecraft::leaveGame
     overwrite_calls((void *) Minecraft_leaveGame, (void *) Minecraft_leaveGame_injection);    // Runs on every tick.
     misc_run_on_update(mcpi_callback);

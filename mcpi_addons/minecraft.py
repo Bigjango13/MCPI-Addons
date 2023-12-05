@@ -314,6 +314,9 @@ class CmdWorld:
     def name(self):
         return self.conn.sendReceive(b"custom.world.name")
 
+    def server_name(self):
+        return self.conn.sendReceive(b"custom.world.servername")
+
     def dir(self):
         return self.conn.sendReceive(b"custom.world.dir")
 

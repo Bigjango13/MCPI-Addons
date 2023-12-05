@@ -82,6 +82,7 @@ void press_button_from_key(bool press, std::string key) {
     press_button_from_code(press, SDL_ScancodeMap[key], SDLKeyMap[key]);
 }
 
+static std::string server = "";
 static std::string name = "";
 static std::string dir = "";
 static bool in_game = false;
@@ -97,6 +98,10 @@ std::string get_world_name() {
 std::string get_world_dir() {
     if (in_local_world()) return dir;
     return "_LastJoinedServer";
+}
+
+std::string get_server_name() {
+    return server;
 }
 
 static void Minecraft_selectLevel_injection(uchar *minecraft, std::string const& level_dir, std::string const& level_name, LevelSettings const& settings) {
@@ -131,6 +136,14 @@ static void Minecraft_leaveGame_injection(uchar *minecraft, bool save_remote_lev
     in_game = false;
 }
 
+// For servers
+static bool Minecraft_joinMultiplayer_injection(uchar *self, uchar *server) {
+    unsigned char *shared_string = *(unsigned char **) (server + RakNet_RakString_sharedString_property_offset);
+    char *c_str = *(char **) (shared_string + RakNet_RakString_SharedString_c_str_property_offset);
+    ::server = c_str;
+    return Minecraft_joinMultiplayer(self, server);
+}
+
 __attribute__((constructor)) static void init() {
     // Patch Minecraft::selectLevel in vtables (doesn't work for server mode, as reborn don't use the vtables)
     patch_address((void *) 0x1023f8 /* MinecraftApp::selectLevel */, (void *) Minecraft_selectLevel_injection);
@@ -139,5 +152,8 @@ __attribute__((constructor)) static void init() {
     overwrite_call((void *) 0x16f84, (void *) Minecraft_selectLevel_ServerLevel_injection);
     // Patch Minecraft::leaveGame
     overwrite_calls((void *) Minecraft_leaveGame, (void *) Minecraft_leaveGame_injection);    // Runs on every tick.
+    // Patch Minecraft::joinMultiplayer
+    overwrite_calls((void *) Minecraft_joinMultiplayer, (void *) Minecraft_joinMultiplayer_injection);
+
     misc_run_on_update(mcpi_callback);
 }

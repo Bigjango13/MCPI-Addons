@@ -319,6 +319,10 @@ std::string handle_world(std::string command, std::string args, uchar *command_s
         // Returns the current worlds name
         std::string name = get_world_name();
         return name+"\n";
+    } else if (command == "custom.world.servername") {
+        // Returns the last joined servers name
+        std::string name = get_server_name();
+        return name+"\n";
     }
     return "";
 }

@@ -42,3 +42,6 @@ static Sheep_setColor_t Sheep_setColor = (Sheep_setColor_t) 0x86274;
 
 typedef unsigned char *(*AgableMob_setAge_t)(uchar *mob, int age);
 static AgableMob_setAge_t AgableMob_setAge = (AgableMob_setAge_t) 0x7a058;
+
+typedef bool (*Minecraft_joinMultiplayer_t)(uchar *self, uchar *server);
+static Minecraft_joinMultiplayer_t Minecraft_joinMultiplayer = (Minecraft_joinMultiplayer_t) 0x165f4;

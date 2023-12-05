@@ -60,6 +60,7 @@ It adds these:
   - `custom.world.particle` (`mc.particle(x, y, z, particle)`) Spawns the particle at (x,y,z).
   - `custom.world.dir` (`mc.world.dir()`) Get the world folder.
   - `custom.world.name` (`mc.world.name()`) Get the world name.
+  - `custom.world.servername` (`mc.world.server_name()`) Get the last joined server name.
 - `custom.player`
   - `custom.player.getHealth` (`mc.player.getHealth()`) Returns the players health.
   - `custom.player.setHealth` (`mc.player.setHealth(health)`) Sets the players health.
@@ -137,6 +138,9 @@ A list of tiles can be found [here](https://mcpirevival.miraheze.org/wiki/Minecr
 A list of entities can be found [here](https://mcpirevival.miraheze.org/wiki/Minecraft:_Pi_Edition_Complete_Entity_List).
 
 ## Changelog
+
+- **1.2.5**
+  - Added `custom.world.servername` to get the name of the server the client is connecting to
 
 - **1.2.4**
   - Fix `custom.world.name` while the mod is running on a server

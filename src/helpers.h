@@ -9,9 +9,11 @@ std::string get_username(unsigned char *player = NULL);
 
 std::string get_world_name();
 std::string get_world_dir();
+std::string get_server_name();
 
 void send_client_message(std::string text) ;
 void press_button_from_key(bool press, std::string key);
+
 #else
 #define bool _Bool
 #endif

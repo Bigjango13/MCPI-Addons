@@ -36,10 +36,11 @@ class Vec3:
         Component by component absolute
         Use Vec3.length() if you want the mathematically correct operation
         """
-        self.x = abs(self.x)
-        self.y = abs(self.y)
-        self.z = abs(self.z)
-        return self
+        c = Vec3()
+        c.x = abs(self.x)
+        c.y = abs(self.y)
+        c.z = abs(self.z)
+        return c
 
     def length(self):
         """
@@ -166,7 +167,7 @@ class Vec3:
         b = rhs
         return Vec3(
             a.y * b.z - a.z * b.y,
-            a.z * b.x - a.z * b.z,
+            a.z * b.x - a.x * b.z,
             a.x * b.y - a.y * b.x
         )
 

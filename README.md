@@ -35,7 +35,7 @@ It adds these:
   - `custom.log.debug` (`mc.logging.debug(msg)`) Logs a message in debug mode.
   - `custom.log.info` (`mc.logging.info(msg)`) Logs a message.
   - `custom.warn` (`mc.logging.warn(msg)`) Logs a warning.
-  - `custom.log.error` (`mc.logging.error(msg)`) Logs an error.
+  - `custom.log.err` (`mc.logging.err(msg)`) Logs an error.
 - `custom.inventory`
   - `custom.inventory.getSlot` (`mc.inventory.getHeldItem()`) Gets the id, auxiliary, and count of the current slot.
   - `custom.inventory.unsafeGive` (`mc.inventory.unsafeGive(id=-2, auxiliary=-2, count=-2)`) give the player the item without safety checking (-2 means don't change)

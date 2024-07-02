@@ -49,7 +49,6 @@ class Connection:
         The actual socket interaction from self.send, extracted for easier mocking
         and testing
         """
-        self.drain()
         self.lastSent = s
 
         self.socket.sendall(s)

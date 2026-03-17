@@ -3,7 +3,7 @@
 A Minecraft Pi Edition: Reborn mod to add more features to the API.
 
 > [!NOTE]
-> Requires Reborn v2.4.8 to v2.5.4 or later. Currently deprecated due to RaspberryJuice features being fully implemented in Reborn 3.0.0, if there is a need for new Python API commands it can be brought back.
+> Requires Reborn v2.4.8 to v2.5.4. **Currently deprecated** due to RaspberryJuice features being fully implemented in Reborn v3.0.0, if there is a need for new Python API commands it can be brought back.
 
 ## Installing
 
@@ -126,7 +126,7 @@ Here is a particle list I found at `0x107511` in `minecraft-pi`
 - `smoke`
 - `largesmoke`
 - `reddust`
-- `ironcrack` (crashes the game)
+- `iconcrack` (crashes the game, used for block breaking animations, need to set data properly)
 - `snowballpoof`
 - `explode`
 

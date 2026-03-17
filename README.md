@@ -2,7 +2,8 @@
 
 A Minecraft Pi Edition: Reborn mod to add more features to the API.
 
-**Note:** requires Reborn v2.4.8 or later.
+> [!NOTE]
+> Requires Reborn v2.4.8 to v2.5.4 or later. Currently deprecated due to RaspberryJuice features being fully implemented in Reborn 3.0.0, if there is a need for new Python API commands it can be brought back.
 
 ## Installing
 
